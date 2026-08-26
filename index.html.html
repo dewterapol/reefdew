@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <!-- กำหนด Viewport ป้องกันซูมและรองรับหน้าจอ iPhone/iPad -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- รองรับการติดตั้งเป็น Web App บน iOS (Add to Home Screen) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ตู้ปลา 40L">
+    
+    <title>ระบบบันทึกค่าน้ำตู้ปลา 40L (Aquaforest Hybrid Pro)</title>
+    <!-- โหลด Chart.js สำหรับทำกราฟ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #38bdf8;
+            --primary-hover: #0284c7;
+            --bg-overlay: rgba(10, 25, 47, 0.85);
+            --card-bg: rgba(15, 30, 55, 0.75);
+            --card-border: rgba(56, 189, 248, 0.2);
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --input-bg: rgba(2, 13, 29, 0.8);
+            --accent-green: #34d399;
+            --accent-purple: #c084fc;
+            --accent-gold: #fbbf24;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text);
+            margin: 0;
+            padding: 15px;
+            padding-top: calc(env(safe-area-inset-top) + 15px);
+            padding-bottom: calc(env(safe-area-inset-bottom) + 25px);
+            min-height: 100vh;
+            background: 
+                linear-gradient(to bottom, rgba(3, 11, 24, 0.88), rgba(5, 19, 38, 0.92)),
+                url('https://images.unsplash.com/photo-1682687220063-4742bd7fd538?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+            font-size: 1.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--card-border);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: var(--primary);
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        /* กำหนด font-size 16px ป้องกัน iOS ออโต้ซูม */
+        input, select {
+            width: 100%;
+            padding: 10px;
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 16px; 
+            color: #ffffff;
+            transition: all 0.3s ease;
+            -webkit-appearance: none;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+        }
+
+        select option {
+            background-color: #0b192c;
+            color: #ffffff;
+        }
+
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+            margin-top: 10px;
+            -webkit-appearance: none;
+        }
+
+        button:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .dosing-result {
+            background: rgba(56, 189, 248, 0.08);
+            border-left: 4px solid var(--primary);
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .salt-box {
+            background: rgba(251, 191, 36, 0.08);
+            border-left: 4px solid var(--accent-gold);
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .dosing-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .dosing-item:last-child { margin-bottom: 0; }
+        .dosing-item strong { color: var(--primary); }
+
+        .recommend-box {
+            background: rgba(52, 211, 153, 0.1);
+            border-left: 4px solid var(--accent-green);
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        th, td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        th {
+            background-color: rgba(56, 189, 248, 0.1);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .val-up { color: #34d399; font-size: 0.75rem; }
+        .val-down { color: #f87171; font-size: 0.75rem; }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: auto;
+            font-size: 0.75rem;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>บันทึกค่าน้ำตู้ 40L (AF Hybrid Pro)</h1>
+
+    <div class="grid">
+        <!-- 1. การตั้งค่าตู้ -->
+        <div class="card">
+            <h2>1. ตั้งค่าระบบและเกลือ</h2>
+            <div class="form-group">
+                <label>ปริมาณน้ำในระบบ (ลิตร):</label>
+                <input type="number" id="waterVolume" value="40" onchange="calculateDosing(); calculateSalt();">
+            </div>
+            <div class="form-group">
+                <label>ยี่ห้อสารเคมีที่ใช้โดส:</label>
+                <select id="brandSelect" onchange="calculateDosing()">
+                    <option value="aquaforest" selected>Aquaforest (Plus / Component)</option>
+                    <option value="redsea">Red Sea (Foundation)</option>
+                    <option value="tropicmarin">Tropic Marin (Balling Liquid)</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex:1;">
+                    <label>เป้า KH:</label>
+                    <input type="number" step="0.1" id="targetKH" value="8.0" onchange="calculateDosing()">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>เป้า Ca:</label>
+                    <input type="number" id="targetCa" value="430" onchange="calculateDosing()">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>เป้า Mg:</label>
+                    <input type="number" id="targetMg" value="1380" onchange="calculateDosing()">
+                </div>
+            </div>
+
+            <label style="font-weight:600; color:var(--accent-gold); margin-top:10px; display:block;">ผสมเกลือเปลี่ยนน้ำ (AF Hybrid Pro):</label>
+            <div class="form-row">
+                <div class="form-group" style="flex:1;">
+                    <label>น้ำเปลี่ยน (ลิตร):</label>
+                    <input type="number" id="changeVolume" value="4" oninput="calculateSalt()">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>ความเค็ม (PPT):</label>
+                    <input type="number" id="targetSalinity" value="33" oninput="calculateSalt()">
+                </div>
+            </div>
+            <div class="salt-box">
+                <div class="dosing-item"><span>น้ำหนักเกลือ AF:</span><strong id="saltGrams" style="color:var(--accent-gold);">0 กรัม</strong></div>
+            </div>
+        </div>
+
+        <!-- 2. บันทึกค่าน้ำและโดสประจำวัน -->
+        <div class="card">
+            <h2>2. บันทึกค่าน้ำวันนี้</h2>
+            <form id="logForm">
+                <div class="form-group">
+                    <label>วันที่:</label>
+                    <input type="date" id="logDate" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;">
+                        <label>KH (dKH):</label>
+                        <input type="number" step="0.1" id="currentKH" placeholder="7.8" required oninput="calculateDosing()">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>โดสไป (mL):</label>
+                        <input type="number" step="0.1" id="dosedKH" placeholder="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;">
+                        <label>Ca (ppm):</label>
+                        <input type="number" id="currentCa" placeholder="420" required oninput="calculateDosing()">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>โดสไป (mL):</label>
+                        <input type="number" step="0.1" id="dosedCa" placeholder="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;">
+                        <label>Mg (ppm):</label>
+                        <input type="number" id="currentMg" placeholder="1350" required oninput="calculateDosing()">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>โดสไป (mL):</label>
+                        <input type="number" step="0.1" id="dosedMg" placeholder="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>NO3 (ppm):</label>
+                    <input type="number" step="0.1" id="currentNO3" placeholder="2.0" required>
+                </div>
+                <button type="submit">บันทึกข้อมูลวันนี้</button>
+            </form>
+        </div>
+
+        <!-- 3. คำนวณปริมาณที่ต้องโดสวันถัดไป -->
+        <div class="card">
+            <h2>3. แนะนำปริมาณโดส</h2>
+            
+            <label style="font-weight:600; color:var(--primary);">โดสเพื่อปรับเข้าสู่เป้าหมาย:</label>
+            <div class="dosing-result">
+                <div class="dosing-item"><span>KH Buffer:</span><strong id="doseKH">0 ml</strong></div>
+                <div class="dosing-item"><span>Calcium:</span><strong id="doseCa">0 ml</strong></div>
+                <div class="dosing-item"><span>Magnesium:</span><strong id="doseMg">0 ml</strong></div>
+            </div>
+
+            <label style="font-weight:600; color:var(--accent-green); margin-top:12px; display:block;">แนะนำโดสประคองรายวัน:</label>
+            <div class="recommend-box">
+                <div class="dosing-item"><span>KH (ประจำวัน):</span><strong id="recKH" style="color:var(--accent-green)">- ml/วัน</strong></div>
+                <div class="dosing-item"><span>Ca (ประจำวัน):</span><strong id="recCa" style="color:var(--accent-green)">- ml/วัน</strong></div>
+                <div class="dosing-item"><span>Mg (ประจำวัน):</span><strong id="recMg" style="color:var(--accent-green)">- ml/วัน</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- กราฟแสดงแนวโน้ม -->
+    <div class="card chart-container">
+        <h2>แนวโน้มค่าน้ำย้อนหลัง</h2>
+        <canvas id="paramChart"></canvas>
+    </div>
+
+    <!-- ตารางประวัติ -->
+    <div class="card">
+        <h2>ประวัติการบันทึก</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>วันที่</th>
+                        <th>KH</th>
+                        <th>Ca</th>
+                        <th>Mg</th>
+                        <th>NO3</th>
+                        <th>โดสจริง</th>
+                        <th>ลบ</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('logDate').valueAsDate = new Date();
+
+    let reefLogs = JSON.parse(localStorage.getItem('reefLogs')) || [];
+    let myChart = null;
+
+    function calculateSalt() {
+        const changeVol = parseFloat(document.getElementById('changeVolume').value) || 0;
+        const targetPPT = parseFloat(document.getElementById('targetSalinity').value) || 33;
+        const saltGrams = changeVol * targetPPT * 1.1515;
+        document.getElementById('saltGrams').innerText = saltGrams.toFixed(1) + ' กรัม';
+    }
+
+    function calculateDosing() {
+        const volume = parseFloat(document.getElementById('waterVolume').value) || 0;
+        const brand = document.getElementById('brandSelect').value;
+
+        const curKH = parseFloat(document.getElementById('currentKH').value) || 0;
+        const curCa = parseFloat(document.getElementById('currentCa').value) || 0;
+        const curMg = parseFloat(document.getElementById('currentMg').value) || 0;
+
+        const tarKH = parseFloat(document.getElementById('targetKH').value) || 0;
+        const tarCa = parseFloat(document.getElementById('targetCa').value) || 0;
+        const tarMg = parseFloat(document.getElementById('targetMg').value) || 0;
+
+        let doseKH = 0, doseCa = 0, doseMg = 0;
+
+        const diffKH = Math.max(0, tarKH - curKH);
+        const diffCa = Math.max(0, tarCa - curCa);
+        const diffMg = Math.max(0, tarMg - curMg);
+
+        if (volume > 0) {
+            if (brand === 'aquaforest') {
+                doseKH = (diffKH * volume) / 5;
+                doseCa = (diffCa * volume) / 100;
+                doseMg = (diffMg * volume) / 100;
+            } else if (brand === 'redsea') {
+                doseKH = (diffKH * volume) / 3.4;
+                doseCa = (diffCa * volume) / 200;
+                doseMg = (diffMg * volume) / 100;
+            } else if (brand === 'tropicmarin') {
+                doseKH = diffKH * volume * 0.28;
+                doseCa = (diffCa * volume) / 53.5;
+                doseMg = (diffMg * volume) / 20;
+            }
+        }
+
+        document.getElementById('doseKH').innerText = doseKH.toFixed(2) + ' ml';
+        document.getElementById('doseCa').innerText = doseCa.toFixed(2) + ' ml';
+        document.getElementById('doseMg').innerText = doseMg.toFixed(2) + ' ml';
+
+        calculateDailyConsumption();
+    }
+
+    function calculateDailyConsumption() {
+        if (reefLogs.length < 2) {
+            document.getElementById('recKH').innerText = 'รอข้อมูล 2 วัน';
+            document.getElementById('recCa').innerText = 'รอข้อมูล 2 วัน';
+            document.getElementById('recMg').innerText = 'รอข้อมูล 2 วัน';
+            return;
+        }
+
+        const volume = parseFloat(document.getElementById('waterVolume').value) || 0;
+        const brand = document.getElementById('brandSelect').value;
+
+        let totalDropKH = 0, totalDropCa = 0, totalDropMg = 0;
+        let count = 0;
+
+        for (let i = 1; i < reefLogs.length; i++) {
+            const prev = reefLogs[i - 1];
+            const curr = reefLogs[i];
+
+            const dropKH = Math.max(0, prev.kh - curr.kh);
+            const dropCa = Math.max(0, prev.ca - curr.ca);
+            const dropMg = Math.max(0, prev.mg - curr.mg);
+
+            totalDropKH += dropKH;
+            totalDropCa += dropCa;
+            totalDropMg += dropMg;
+            count++;
+        }
+
+        const avgDropKH = totalDropKH / count;
+        const avgDropCa = totalDropCa / count;
+        const avgDropMg = totalDropMg / count;
+
+        let reqKH = 0, reqCa = 0, reqMg = 0;
+
+        if (brand === 'aquaforest') {
+            reqKH = (avgDropKH * volume) / 5;
+            reqCa = (avgDropCa * volume) / 100;
+            reqMg = (avgDropMg * volume) / 100;
+        } else if (brand === 'redsea') {
+            reqKH = (avgDropKH * volume) / 3.4;
+            reqCa = (avgDropCa * volume) / 200;
+            reqMg = (avgDropMg * volume) / 100;
+        } else if (brand === 'tropicmarin') {
+            reqKH = avgDropKH * volume * 0.28;
+            reqCa = (avgDropCa * volume) / 53.5;
+            reqMg = (avgDropMg * volume) / 20;
+        }
+
+        document.getElementById('recKH').innerText = reqKH.toFixed(2) + ' ml/วัน';
+        document.getElementById('recCa').innerText = reqCa.toFixed(2) + ' ml/วัน';
+        document.getElementById('recMg').innerText = reqMg.toFixed(2) + ' ml/วัน';
+    }
+
+    document.getElementById('logForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const newEntry = {
+            id: Date.now(),
+            date: document.getElementById('logDate').value,
+            kh: parseFloat(document.getElementById('currentKH').value),
+            ca: parseFloat(document.getElementById('currentCa').value),
+            mg: parseFloat(document.getElementById('currentMg').value),
+            no3: parseFloat(document.getElementById('currentNO3').value),
+            dosedKH: parseFloat(document.getElementById('dosedKH').value) || 0,
+            dosedCa: parseFloat(document.getElementById('dosedCa').value) || 0,
+            dosedMg: parseFloat(document.getElementById('dosedMg').value) || 0
+        };
+
+        reefLogs.push(newEntry);
+        reefLogs.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        localStorage.setItem('reefLogs', JSON.stringify(reefLogs));
+        
+        document.getElementById('currentKH').value = '';
+        document.getElementById('currentCa').value = '';
+        document.getElementById('currentMg').value = '';
+        document.getElementById('currentNO3').value = '';
+        document.getElementById('dosedKH').value = '';
+        document.getElementById('dosedCa').value = '';
+        document.getElementById('dosedMg').value = '';
+
+        updateApp();
+    });
+
+    function deleteLog(id) {
+        reefLogs = reefLogs.filter(item => item.id !== id);
+        localStorage.setItem('reefLogs', JSON.stringify(reefLogs));
+        updateApp();
+    }
+
+    function updateApp() {
+        renderTable();
+        renderChart();
+        calculateDailyConsumption();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('historyTable');
+        tbody.innerHTML = '';
+
+        const reversedLogs = [...reefLogs].reverse();
+
+        reversedLogs.forEach((log, index) => {
+            const originalIndex = reefLogs.length - 1 - index;
+            const prevLog = reefLogs[originalIndex - 1];
+
+            let diffKHText = '', diffCaText = '', diffMgText = '';
+
+            if (prevLog) {
+                const dKH = (log.kh - prevLog.kh).toFixed(1);
+                const dCa = (log.ca - prevLog.ca).toFixed(0);
+                const dMg = (log.mg - prevLog.mg).toFixed(0);
+
+                diffKHText = dKH >= 0 ? `<span class="val-up">(+${dKH})</span>` : `<span class="val-down">(${dKH})</span>`;
+                diffCaText = dCa >= 0 ? `<span class="val-up">(+${dCa})</span>` : `<span class="val-down">(${dCa})</span>`;
+                diffMgText = dMg >= 0 ? `<span class="val-up">(+${dMg})</span>` : `<span class="val-down">(${dMg})</span>`;
+            }
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${log.date}</td>
+                <td>${log.kh} ${diffKHText}</td>
+                <td>${log.ca} ${diffCaText}</td>
+                <td>${log.mg} ${diffMgText}</td>
+                <td>${log.no3}</td>
+                <td>${log.dosedKH || 0}/${log.dosedCa || 0}/${log.dosedMg || 0}</td>
+                <td><button class="btn-delete" onclick="deleteLog(${log.id})">ลบ</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderChart() {
+        const ctx = document.getElementById('paramChart').getContext('2d');
+        const labels = reefLogs.map(l => l.date);
+
+        if (myChart) myChart.destroy();
+
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.08)';
+
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'KH', data: reefLogs.map(l => l.kh), borderColor: '#38bdf8', backgroundColor: '#38bdf8', yAxisID: 'y', tension: 0.3 },
+                    { label: 'NO3', data: reefLogs.map(l => l.no3), borderColor: '#f87171', backgroundColor: '#f87171', yAxisID: 'y', tension: 0.3 },
+                    { label: 'Ca', data: reefLogs.map(l => l.ca), borderColor: '#34d399', backgroundColor: '#34d399', yAxisID: 'y1', tension: 0.3 },
+                    { label: 'Mg', data: reefLogs.map(l => l.mg), borderColor: '#c084fc', backgroundColor: '#c084fc', yAxisID: 'y1', tension: 0.3 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { type: 'linear', position: 'left', title: { display: true, text: 'KH / NO3', color: '#38bdf8' } },
+                    y1: { type: 'linear', position: 'right', title: { display: true, text: 'Ca / Mg', color: '#34d399' }, grid: { drawOnChartArea: false } }
+                }
+            }
+        });
+    }
+
+    calculateSalt();
+    updateApp();
+</script>
+
+</body>
+</html>
