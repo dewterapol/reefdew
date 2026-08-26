@@ -243,7 +243,7 @@
                 <input type="number" id="waterVolume" value="40" onchange="calculateDosing(); calculateSalt();">
             </div>
             
-            <label style="font-weight:600; color:var(--accent-gold); margin-top:10px; display:block;">คำนวณผสมเกลือ AF Hybrid Pro Salt (390g / 10L):</label>
+            <label style="font-weight:600; color:var(--accent-gold); margin-top:10px; display:block;">คำนวณผสมเกลือ AF Hybrid Pro Salt (390 ml / 10L):</label>
             <div class="form-row">
                 <div class="form-group" style="flex:1;">
                     <label>น้ำเปลี่ยน (ลิตร):</label>
@@ -261,12 +261,12 @@
 
             <div class="salt-box">
                 <div class="dosing-item">
-                    <span>น้ำหนักเกลือที่ต้องใช้:</span>
-                    <strong id="saltGram" style="color:var(--accent-gold); font-size: 1.1rem;">0 กรัม</strong>
+                    <span>ปริมาตรเกลือที่ต้องใช้:</span>
+                    <strong id="saltMl" style="color:var(--accent-gold); font-size: 1.1rem;">0 ml</strong>
                 </div>
                 <div class="dosing-item">
                     <span style="font-size:0.75rem; color:var(--text-muted);">อัตราส่วนที่ใช้:</span>
-                    <span id="saltRatioText" style="font-size:0.75rem; color:var(--text-muted);">39 กรัม / น้ำ 1 ลิตร</span>
+                    <span id="saltRatioText" style="font-size:0.75rem; color:var(--text-muted);">39 ml / น้ำ 1 ลิตร</span>
                 </div>
                 <div class="dosing-item" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:6px;">
                     <span style="font-size:0.75rem; color:var(--text-muted);">ค่าน้ำเกลือใหม่:</span>
@@ -416,7 +416,7 @@
     // Firebase Config
     // -------------------------------------------------------------
     const firebaseConfig = {
-       apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
+        apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
   authDomain: "dewreef-838de.firebaseapp.com",
   databaseURL: "https://dewreef-838de-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "dewreef-838de",
@@ -632,7 +632,7 @@
     }
 
     // -------------------------------------------------------------
-    // คำนวณปริมาณเกลือ AF Hybrid Pro Salt (390g / 10L = 39g/L ที่ 33ppt)
+    // คำนวณปริมาณเกลือ AF Hybrid Pro Salt (หน่วย: มิลลิลิตร / ml)
     // -------------------------------------------------------------
     function calculateSalt() {
         const changeVol = parseFloat(document.getElementById('changeVolume').value) || 0;
@@ -640,9 +640,9 @@
         
         const spec = afSaltSpecs[targetPPT];
         if (spec) {
-            const saltGram = changeVol * spec.ratio;
-            document.getElementById('saltGram').innerText = saltGram.toFixed(1) + ' กรัม (g)';
-            document.getElementById('saltRatioText').innerText = `${spec.ratio} กรัม / น้ำ 1 ลิตร`;
+            const saltMl = changeVol * spec.ratio;
+            document.getElementById('saltMl').innerText = saltMl.toFixed(1) + ' ml (มิลลิลิตร)';
+            document.getElementById('saltRatioText').innerText = `${spec.ratio} ml / น้ำ 1 ลิตร`;
             document.getElementById('saltSpecText').innerText = `KH ${spec.khMin}-${spec.khMax} | Ca ${spec.caMin}-${spec.caMax} | Mg ${spec.mgMin}-${spec.mgMax}`;
         }
     }
