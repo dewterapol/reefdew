@@ -141,9 +141,122 @@
         .badge-danger { background: rgba(248, 113, 113, 0.2); color: #f87171; }
         
         .btn-delete { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; width: auto; }
+
+        /* =================================================== */
+        /* STYLES: Draggable Clownfish Widget & Speech Bubble  */
+        /* =================================================== */
+        #clownfishContainer {
+            position: fixed;
+            bottom: 30px;
+            right: 25px;
+            z-index: 9999;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #clownfishContainer:active {
+            cursor: grabbing;
+        }
+
+        /* Speech Bubble (กรอบคำพูดหิวข้าว) */
+        .speech-bubble {
+            position: relative;
+            background: #ffffff;
+            color: #0f172a;
+            padding: 8px 14px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            margin-bottom: 8px;
+            white-space: nowrap;
+            animation: bounceBubble 2s infinite ease-in-out;
+            border: 2px solid #ff7700;
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 8px 8px 0;
+            border-style: solid;
+            border-color: #ffffff transparent;
+            display: block;
+            width: 0;
+        }
+
+        /* Clownfish SVG Avatar */
+        .clownfish-avatar {
+            width: 65px;
+            height: 65px;
+            filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4));
+            animation: swimFloat 3s infinite ease-in-out;
+            transition: transform 0.2s ease;
+        }
+
+        .clownfish-avatar:hover {
+            transform: scale(1.1);
+        }
+
+        @keyframes swimFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(-3deg); }
+        }
+
+        @keyframes bounceBubble {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
     </style>
 </head>
 <body>
+
+<!-- WIDGET: ปลาการ์ตูนลากได้ + เตือนให้อาหาร -->
+<div id="clownfishContainer">
+    <div id="fishBubble" class="speech-bubble" style="display: none;">
+        🥣 หิวแล้วครับ! อย่าลืมให้อาหารพวกเราตอนเช้านะ 🐠✨
+    </div>
+    <!-- SVG Vector รูปปลาการ์ตูน (Clownfish) -->
+    <svg class="clownfish-avatar" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- Tail Fin -->
+        <path d="M 20,50 Q 5,30 8,50 Q 5,70 20,50 Z" fill="#FF6B00" stroke="#000" stroke-width="2.5"/>
+        <path d="M 14,38 Q 8,50 14,62" fill="none" stroke="#FFF" stroke-width="3"/>
+        <path d="M 10,40 Q 5,50 10,60" fill="none" stroke="#000" stroke-width="2"/>
+
+        <!-- Top & Bottom Fins -->
+        <path d="M 45,25 Q 55,10 65,22 Z" fill="#FF6B00" stroke="#000" stroke-width="2.5"/>
+        <path d="M 45,75 Q 55,90 65,78 Z" fill="#FF6B00" stroke="#000" stroke-width="2.5"/>
+
+        <!-- Main Body -->
+        <ellipse cx="55" cy="50" rx="35" ry="25" fill="#FF6B00" stroke="#000" stroke-width="2.5"/>
+
+        <!-- White Stripes (ลายแถบขาวตึ๊ดตามสไตล์ปลาการ์ตูน) -->
+        <!-- Stripe 1 (Tail) -->
+        <path d="M 32,32 Q 35,50 32,68 Q 27,65 27,35 Z" fill="#FFFFFF" stroke="#000" stroke-width="2"/>
+        <!-- Stripe 2 (Middle) -->
+        <path d="M 52,25 Q 57,50 52,75 Q 45,72 45,28 Z" fill="#FFFFFF" stroke="#000" stroke-width="2"/>
+        <!-- Stripe 3 (Head) -->
+        <path d="M 72,28 Q 77,50 72,71 Q 67,67 67,33 Z" fill="#FFFFFF" stroke="#000" stroke-width="2"/>
+
+        <!-- Pectoral Fin -->
+        <path d="M 48,52 Q 40,60 48,65 Z" fill="#FF851B" stroke="#000" stroke-width="2"/>
+        <path d="M 46,55 Q 42,60 46,63" fill="none" stroke="#FFF" stroke-width="2"/>
+
+        <!-- Eye -->
+        <circle cx="78" cy="44" r="6" fill="#FFFFFF" stroke="#000" stroke-width="1.5"/>
+        <circle cx="79" cy="44" r="3" fill="#000000"/>
+        <circle cx="80.5" cy="42.5" r="1" fill="#FFFFFF"/>
+
+        <!-- Cute Smile Mouth -->
+        <path d="M 85,52 Q 82,56 87,57" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+</div>
 
 <div class="container">
     <div class="header-box" id="headerBox">
@@ -324,7 +437,7 @@
     // นำคีย์จาก Firebase มาวางแทนที่ตรงนี้
     // -------------------------------------------------------------
     const firebaseConfig = {
-       apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
+        apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
   authDomain: "dewreef-838de.firebaseapp.com",
   databaseURL: "https://dewreef-838de-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "dewreef-838de",
@@ -357,38 +470,33 @@
     let myChart = null;
 
     // -------------------------------------------------------------
-    // ฟังก์ชัน Ambient Light คำนวณตามเวลาไฟตู้ปลา (7:30 - 22:30 น.)
+    // 1. ระบบ Ambient Light คำนวณตามเวลาไฟตู้ปลา (7:30 - 22:30 น.)
     // -------------------------------------------------------------
     function updateAmbientLight() {
         const now = new Date();
         const hours = now.getHours();
         const minutes = now.getMinutes();
-        const currentTime = hours + minutes / 60; // แปลงเป็นเวลาทศนิยม
+        const currentTime = hours + minutes / 60;
 
         const root = document.documentElement;
         const lightBadge = document.getElementById('lightBadge');
 
-        // ไฟเปิด 07:30 น. (7.5) ถึง 22:30 น. (22.5)
         if (currentTime >= 7.5 && currentTime < 8.5) {
-            // ช่วงไฟพระอาทิตย์ขึ้น (Sunrise / Dawn) 7:30 - 8:30 น.
             root.style.setProperty('--ambient-color', 'rgba(251, 146, 60, 0.5)');
             root.style.setProperty('--ambient-glow', '0 0 30px rgba(251, 146, 60, 0.6)');
             lightBadge.innerHTML = '🌅 <b>เปิดไฟตู้ปลา:</b> โหมดพระอาทิตย์ขึ้น (Sunrise)';
             lightBadge.style.color = '#fb923c';
         } else if (currentTime >= 8.5 && currentTime < 20.5) {
-            // ช่วงไฟกลางวันเต็มที่ (Full Reef Daylight) 8:30 - 20:30 น.
             root.style.setProperty('--ambient-color', 'rgba(56, 189, 248, 0.5)');
             root.style.setProperty('--ambient-glow', '0 0 35px rgba(56, 189, 248, 0.7)');
             lightBadge.innerHTML = '☀️ <b>เปิดไฟตู้ปลา:</b> โหมดกลางวัน (Daylight 100%)';
             lightBadge.style.color = '#38bdf8';
         } else if (currentTime >= 20.5 && currentTime < 22.5) {
-            // ช่วงไฟเย็น / เรืองแสง (Actinic / Sunset) 20:30 - 22:30 น.
             root.style.setProperty('--ambient-color', 'rgba(168, 85, 247, 0.6)');
             root.style.setProperty('--ambient-glow', '0 0 35px rgba(168, 85, 247, 0.8)');
             lightBadge.innerHTML = '🌙 <b>เปิดไฟตู้ปลา:</b> โหมดแสงบลูเรืองแสง (Actinic Blue)';
             lightBadge.style.color = '#c084fc';
         } else {
-            // ปิดไฟตู้ปลา (Night Off) 22:30 - 07:30 น.
             root.style.setProperty('--ambient-color', 'rgba(30, 41, 59, 0.3)');
             root.style.setProperty('--ambient-glow', '0 0 15px rgba(15, 23, 42, 0.5)');
             lightBadge.innerHTML = '🌑 <b>ปิดไฟตู้ปลา:</b> โหมดกลางคืน (Night Off)';
@@ -396,9 +504,80 @@
         }
     }
 
-    // อัปเดตแสง Ambient Light ทันทีและทุกๆ 1 นาที
+    // -------------------------------------------------------------
+    // 2. ระบบแจ้งเตือนเวลาให้อาหารปลา ( morning alert < 12:00 น.)
+    // -------------------------------------------------------------
+    function updateFeedingAlert() {
+        const now = new Date();
+        const hours = now.getHours();
+        const fishBubble = document.getElementById('fishBubble');
+
+        // แสดงข้อความหิวตอนเช้า (ก่อนเที่ยง 00:00 - 11:59 น.) พอ 12:00 น. ข้อความจะซ่อนไป
+        if (hours < 12) {
+            fishBubble.style.display = 'block';
+        } else {
+            fishBubble.style.display = 'none';
+        }
+    }
+
+    // -------------------------------------------------------------
+    // 3. ระบบลากน้องปลาการ์ตูน (Draggable Clownfish Engine)
+    // -------------------------------------------------------------
+    const fishContainer = document.getElementById('clownfishContainer');
+    let isDragging = false;
+    let currentX, currentY, initialX, initialY;
+    let xOffset = 0, yOffset = 0;
+
+    fishContainer.addEventListener('mousedown', dragStart);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', dragEnd);
+
+    fishContainer.addEventListener('touchstart', dragStart, {passive: false});
+    document.addEventListener('touchmove', drag, {passive: false});
+    document.addEventListener('touchend', dragEnd);
+
+    function dragStart(e) {
+        if (e.type === "touchstart") {
+            initialX = e.touches[0].clientX - xOffset;
+            initialY = e.touches[0].clientY - yOffset;
+        } else {
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+        }
+        isDragging = true;
+    }
+
+    function drag(e) {
+        if (isDragging) {
+            e.preventDefault();
+            if (e.type === "touchmove") {
+                currentX = e.touches[0].clientX - initialX;
+                currentY = e.touches[0].clientY - initialY;
+            } else {
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+            }
+            xOffset = currentX;
+            yOffset = currentY;
+            setTranslate(currentX, currentY, fishContainer);
+        }
+    }
+
+    function setTranslate(xPos, yPos, el) {
+        el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+    }
+
+    function dragEnd() {
+        initialX = currentX;
+        initialY = currentY;
+        isDragging = false;
+    }
+
+    // รันการตรวจสอบเวลา
     updateAmbientLight();
+    updateFeedingAlert();
     setInterval(updateAmbientLight, 60000);
+    setInterval(updateFeedingAlert, 60000);
 
     // โหลดเป้าหมายที่บันทึกไว้ใน Firebase Cloud
     targetRef.on('value', (snapshot) => {
