@@ -28,7 +28,7 @@
             --accent-gold: #fbbf24;
         }
 
-       body {
+        body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             color: var(--text);
             margin: 0;
@@ -36,7 +36,6 @@
             padding-top: calc(env(safe-area-inset-top) + 15px);
             padding-bottom: calc(env(safe-area-inset-bottom) + 25px);
             min-height: 100vh;
-            /* พื้นหลังใต้มหาสมุทรโทน DARK มืดลึก สบายตา */
             background: linear-gradient(to bottom, rgba(3, 10, 25, 0.85), rgba(2, 6, 18, 0.93)),
                         url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
             -webkit-tap-highlight-color: transparent;
@@ -93,14 +92,6 @@
             <div class="form-group">
                 <label>ปริมาณน้ำในระบบ (ลิตร):</label>
                 <input type="number" id="waterVolume" value="40" onchange="calculateDosing(); calculateSalt();">
-            </div>
-            <div class="form-group">
-                <label>ยี่ห้อสารเคมีที่ใช้โดส:</label>
-                <select id="brandSelect" onchange="calculateDosing()">
-                    <option value="aquaforest" selected>Aquaforest (Plus / Component)</option>
-                    <option value="redsea">Red Sea (Foundation)</option>
-                    <option value="tropicmarin">Tropic Marin (Balling Liquid)</option>
-                </select>
             </div>
             
             <label style="font-weight:600; color:var(--accent-gold); margin-top:10px; display:block;">ผสมเกลือ AF Hybrid Pro Salt:</label>
@@ -256,12 +247,12 @@
     // -------------------------------------------------------------
     const firebaseConfig = {
         apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
-        authDomain: "dewreef-838de.firebaseapp.com",
-        databaseURL: "https://dewreef-838de-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "dewreef-838de",
-        storageBucket: "dewreef-838de.firebasestorage.app",
-        messagingSenderId: "219612211355",
-        appId: "1:219612211355:web:9275b47ae7ebc997977e3e"
+  authDomain: "dewreef-838de.firebaseapp.com",
+  databaseURL: "https://dewreef-838de-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "dewreef-838de",
+  storageBucket: "dewreef-838de.firebasestorage.app",
+  messagingSenderId: "219612211355",
+  appId: "1:219612211355:web:9275b47ae7ebc997977e3e"
     };
     // -------------------------------------------------------------
 
@@ -297,18 +288,15 @@
         const changeVol = parseFloat(document.getElementById('changeVolume').value) || 0;
         const targetPPT = parseInt(document.getElementById('targetSalinity').value) || 33;
         
-        // คำนวณน้ำหนักเกลือ AF (ประมาณ 1.1515g / L / PPT)
         const saltGrams = changeVol * targetPPT * 1.1515;
         document.getElementById('saltGrams').innerText = saltGrams.toFixed(1) + ' กรัม';
 
-        // แสดงสเปกค่าน้ำเกลือใหม่
         const spec = afSaltSpecs[targetPPT];
         if (spec) {
             document.getElementById('saltSpecText').innerText = `KH ${spec.khMin}-${spec.khMax} | Ca ${spec.caMin}-${spec.caMax} | Mg ${spec.mgMin}-${spec.mgMax}`;
         }
     }
 
-    // อัปเดตเป้าหมายค่าน้ำตามความเค็มที่เลือกให้อัตโนมัติ
     function autoSetTargetBySalt() {
         const ppt = parseInt(document.getElementById('targetSalinity').value) || 33;
         const spec = afSaltSpecs[ppt];
@@ -322,7 +310,6 @@
 
     function calculateDosing() {
         const volume = parseFloat(document.getElementById('waterVolume').value) || 0;
-        const brand = document.getElementById('brandSelect').value;
 
         const curKH = parseFloat(document.getElementById('currentKH').value) || 0;
         const curCa = parseFloat(document.getElementById('currentCa').value) || 0;
@@ -339,19 +326,14 @@
         const diffMg = Math.max(0, tarMg - curMg);
 
         if (volume > 0) {
-            if (brand === 'aquaforest') {
-                doseKH = (diffKH * volume) / 5;
-                doseCa = (diffCa * volume) / 100;
-                doseMg = (diffMg * volume) / 100;
-            } else if (brand === 'redsea') {
-                doseKH = (diffKH * volume) / 3.4;
-                doseCa = (diffCa * volume) / 200;
-                doseMg = (diffMg * volume) / 100;
-            } else if (brand === 'tropicmarin') {
-                doseKH = diffKH * volume * 0.28;
-                doseCa = (diffCa * volume) / 53.5;
-                doseMg = (diffMg * volume) / 20;
-            }
+            // KH: 1 ml / 100L เพิ่ม 0.5 dKH => (diffKH / 0.5) * (volume / 100) = diffKH * volume / 50
+            doseKH = (diffKH * volume) / 50;
+
+            // Ca: 10 ml / 100L (1ml/100L=0.45ppm) เพิ่ม 4.5 ppm => (diffCa / 4.5) * 10 * (volume / 100) = (diffCa * volume) / 45
+            doseCa = (diffCa * volume) / 45;
+
+            // Mg: 10 ml / 100L (1ml/100L=0.2ppm) เพิ่ม 2.0 ppm => (diffMg / 2.0) * 10 * (volume / 100) = (diffMg * volume) / 20
+            doseMg = (diffMg * volume) / 20;
         }
 
         document.getElementById('doseKH').innerText = doseKH.toFixed(2) + ' ml';
@@ -370,7 +352,6 @@
         }
 
         const volume = parseFloat(document.getElementById('waterVolume').value) || 0;
-        const brand = document.getElementById('brandSelect').value;
 
         let totalDropKH = 0, totalDropCa = 0, totalDropMg = 0;
         let count = 0;
@@ -391,17 +372,9 @@
 
         let reqKH = 0, reqCa = 0, reqMg = 0;
 
-        if (brand === 'aquaforest') {
-            reqKH = (avgDropKH * volume) / 5;
-            reqCa = (avgDropCa * volume) / 100;
-            reqMg = (avgDropMg * volume) / 100;
-        } else if (brand === 'redsea') {
-            reqKH = (avgDropKH * volume) / 3.4;
-            reqCa = (avgDropCa * volume) / 200;
-            reqMg = (avgDropMg * volume) / 100;
-        } else if (brand === 'tropicmarin') {
-            reqKH = avgDropKH * volume * 0.28;
-            reqCa = (avgDropCa * volume) / 53.5;
+        if (volume > 0) {
+            reqKH = (avgDropKH * volume) / 50;
+            reqCa = (avgDropCa * volume) / 45;
             reqMg = (avgDropMg * volume) / 20;
         }
 
