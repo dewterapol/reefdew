@@ -2,22 +2,22 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <!-- กำหนด Viewport ป้องกันซูมและรองรับหน้าจอ iPhone/iPad -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <!-- รองรับการติดตั้งเป็น Web App บน iOS (Add to Home Screen) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ตู้ปลา 40L">
     
-    <title>ระบบบันทึกค่าน้ำตู้ปลา 40L (Aquaforest Hybrid Pro)</title>
-    <!-- โหลด Chart.js สำหรับทำกราฟ -->
+    <title>ระบบบันทึกค่าน้ำตู้ปลา 40L (Cloud Sync)</title>
+    
+    <!-- โหลด Chart.js และ Firebase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
         :root {
             --primary: #38bdf8;
             --primary-hover: #0284c7;
-            --bg-overlay: rgba(10, 25, 47, 0.85);
             --card-bg: rgba(15, 30, 55, 0.75);
             --card-border: rgba(56, 189, 248, 0.2);
             --text: #f1f5f9;
@@ -29,209 +29,60 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             color: var(--text);
             margin: 0;
             padding: 15px;
             padding-top: calc(env(safe-area-inset-top) + 15px);
             padding-bottom: calc(env(safe-area-inset-bottom) + 25px);
             min-height: 100vh;
-            background: 
-                linear-gradient(to bottom, rgba(3, 11, 24, 0.88), rgba(5, 19, 38, 0.92)),
-                url('https://images.unsplash.com/photo-1682687220063-4742bd7fd538?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
+            background: linear-gradient(to bottom, rgba(3, 11, 24, 0.88), rgba(5, 19, 38, 0.92)),
+                        url('https://images.unsplash.com/photo-1682687220063-4742bd7fd538?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
             -webkit-tap-highlight-color: transparent;
         }
 
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        h1 {
+        .container { max-width: 1100px; margin: 0 auto; }
+        h1 { text-align: center; color: var(--primary); margin-bottom: 20px; font-size: 1.5rem; text-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
+        
+        .sync-status {
             text-align: center;
-            color: var(--primary);
-            margin-bottom: 20px;
-            text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
-            font-size: 1.5rem;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            padding: 16px;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--card-border);
-        }
-
-        .card h2 {
-            font-size: 1.1rem;
-            margin-top: 0;
-            margin-bottom: 12px;
-            color: var(--primary);
-            border-bottom: 1px solid var(--card-border);
-            padding-bottom: 8px;
-        }
-
-        .form-group {
-            margin-bottom: 12px;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 8px;
-        }
-
-        label {
-            display: block;
-            font-size: 0.85rem;
-            margin-bottom: 4px;
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-
-        /* กำหนด font-size 16px ป้องกัน iOS ออโต้ซูม */
-        input, select {
-            width: 100%;
-            padding: 10px;
-            background: var(--input-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 10px;
-            box-sizing: border-box;
-            font-size: 16px; 
-            color: #ffffff;
-            transition: all 0.3s ease;
-            -webkit-appearance: none;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
-        }
-
-        select option {
-            background-color: #0b192c;
-            color: #ffffff;
-        }
-
-        button {
-            width: 100%;
-            background: linear-gradient(135deg, #0284c7, #0369a1);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
-            margin-top: 10px;
-            -webkit-appearance: none;
-        }
-
-        button:active {
-            transform: scale(0.98);
-            opacity: 0.9;
-        }
-
-        .dosing-result {
-            background: rgba(56, 189, 248, 0.08);
-            border-left: 4px solid var(--primary);
-            padding: 12px;
-            margin-top: 10px;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .salt-box {
-            background: rgba(251, 191, 36, 0.08);
-            border-left: 4px solid var(--accent-gold);
-            padding: 12px;
-            margin-top: 10px;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .dosing-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 0.9rem;
-        }
-
-        .dosing-item:last-child { margin-bottom: 0; }
-        .dosing-item strong { color: var(--primary); }
-
-        .recommend-box {
-            background: rgba(52, 211, 153, 0.1);
-            border-left: 4px solid var(--accent-green);
-            padding: 12px;
-            margin-top: 10px;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin-bottom: 20px;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
             font-size: 0.8rem;
-            white-space: nowrap;
+            margin-bottom: 15px;
+            color: var(--accent-green);
         }
 
-        th, td {
-            padding: 10px 8px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        th {
-            background-color: rgba(56, 189, 248, 0.1);
-            color: var(--primary);
-            font-weight: 600;
-        }
-
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .card { background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 16px; border-radius: 16px; border: 1px solid var(--card-border); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
+        .card h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 12px; color: var(--primary); border-bottom: 1px solid var(--card-border); padding-bottom: 8px; }
+        .form-group { margin-bottom: 12px; }
+        .form-row { display: flex; gap: 8px; }
+        label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-muted); }
+        input, select { width: 100%; padding: 10px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 10px; font-size: 16px; color: #fff; box-sizing: border-box; }
+        button { width: 100%; background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        .dosing-result { background: rgba(56, 189, 248, 0.08); border-left: 4px solid var(--primary); padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; }
+        .salt-box { background: rgba(251, 191, 36, 0.08); border-left: 4px solid var(--accent-gold); padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; }
+        .recommend-box { background: rgba(52, 211, 153, 0.1); border-left: 4px solid var(--accent-green); padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; }
+        .dosing-item { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; }
+        
+        .chart-container { position: relative; height: 300px; margin-bottom: 20px; }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.8rem; white-space: nowrap; }
+        th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        th { background-color: rgba(56, 189, 248, 0.1); color: var(--primary); }
         .val-up { color: #34d399; font-size: 0.75rem; }
         .val-down { color: #f87171; font-size: 0.75rem; }
-
-        .btn-delete {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-            border: none;
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            width: auto;
-            font-size: 0.75rem;
-            margin-top: 0;
-        }
+        .btn-delete { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; width: auto; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>บันทึกค่าน้ำตู้ 40L (AF Hybrid Pro)</h1>
+    <h1>ระบบบันทึกค่าน้ำตู้ 40L (AF Hybrid Pro)</h1>
+    <div class="sync-status" id="syncStatus">☁️ เชื่อมต่อระบบ Cloud Sync เรียบร้อย</div>
 
     <div class="grid">
-        <!-- 1. การตั้งค่าตู้ -->
+        <!-- 1. ตั้งค่า -->
         <div class="card">
             <h2>1. ตั้งค่าระบบและเกลือ</h2>
             <div class="form-group">
@@ -277,7 +128,7 @@
             </div>
         </div>
 
-        <!-- 2. บันทึกค่าน้ำและโดสประจำวัน -->
+        <!-- 2. บันทึก -->
         <div class="card">
             <h2>2. บันทึกค่าน้ำวันนี้</h2>
             <form id="logForm">
@@ -319,14 +170,13 @@
                     <label>NO3 (ppm):</label>
                     <input type="number" step="0.1" id="currentNO3" placeholder="2.0" required>
                 </div>
-                <button type="submit">บันทึกข้อมูลวันนี้</button>
+                <button type="submit">บันทึกข้อมูลแบบ Cloud Sync</button>
             </form>
         </div>
 
-        <!-- 3. คำนวณปริมาณที่ต้องโดสวันถัดไป -->
+        <!-- 3. แนะนำโดส -->
         <div class="card">
             <h2>3. แนะนำปริมาณโดส</h2>
-            
             <label style="font-weight:600; color:var(--primary);">โดสเพื่อปรับเข้าสู่เป้าหมาย:</label>
             <div class="dosing-result">
                 <div class="dosing-item"><span>KH Buffer:</span><strong id="doseKH">0 ml</strong></div>
@@ -343,13 +193,11 @@
         </div>
     </div>
 
-    <!-- กราฟแสดงแนวโน้ม -->
     <div class="card chart-container">
         <h2>แนวโน้มค่าน้ำย้อนหลัง</h2>
         <canvas id="paramChart"></canvas>
     </div>
 
-    <!-- ตารางประวัติ -->
     <div class="card">
         <h2>ประวัติการบันทึก</h2>
         <div class="table-responsive">
@@ -372,10 +220,41 @@
 </div>
 
 <script>
-    document.getElementById('logDate').valueAsDate = new Date();
+    // -------------------------------------------------------------
+    // นำคีย์จาก Firebase มาวางแทนที่ตรงนี้
+    // -------------------------------------------------------------
+    const firebaseConfig = {
+        apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
+        authDomain: "dewreef-838de.firebaseapp.com",
+        databaseURL: "https://dewreef-838de-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "dewreef-838de",
+        storageBucket: "dewreef-838de.firebasestorage.app",
+        messagingSenderId: "219612211355",
+        appId: "1:219612211355:web:9275b47ae7ebc997977e3e"
+    };
+    // -------------------------------------------------------------
 
-    let reefLogs = JSON.parse(localStorage.getItem('reefLogs')) || [];
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const logsRef = db.ref('reefLogs');
+
+    document.getElementById('logDate').valueAsDate = new Date();
+    let reefLogs = [];
     let myChart = null;
+
+    // ดึงข้อมูล Realtime จาก Cloud (ซิงค์อัตโนมัติทุกเครื่อง)
+    logsRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        reefLogs = [];
+        if (data) {
+            Object.keys(data).forEach(key => {
+                reefLogs.push({ firebaseKey: key, ...data[key] });
+            });
+            reefLogs.sort((a, b) => new Date(a.date) - new Date(b.date));
+        }
+        updateApp();
+        document.getElementById('syncStatus').innerText = '☁️ ซิงค์ข้อมูลข้ามเครื่องเรียบร้อยแล้ว';
+    });
 
     function calculateSalt() {
         const changeVol = parseFloat(document.getElementById('changeVolume').value) || 0;
@@ -443,13 +322,9 @@
             const prev = reefLogs[i - 1];
             const curr = reefLogs[i];
 
-            const dropKH = Math.max(0, prev.kh - curr.kh);
-            const dropCa = Math.max(0, prev.ca - curr.ca);
-            const dropMg = Math.max(0, prev.mg - curr.mg);
-
-            totalDropKH += dropKH;
-            totalDropCa += dropCa;
-            totalDropMg += dropMg;
+            totalDropKH += Math.max(0, prev.kh - curr.kh);
+            totalDropCa += Math.max(0, prev.ca - curr.ca);
+            totalDropMg += Math.max(0, prev.mg - curr.mg);
             count++;
         }
 
@@ -493,10 +368,8 @@
             dosedMg: parseFloat(document.getElementById('dosedMg').value) || 0
         };
 
-        reefLogs.push(newEntry);
-        reefLogs.sort((a, b) => new Date(a.date) - new Date(b.date));
-        
-        localStorage.setItem('reefLogs', JSON.stringify(reefLogs));
+        // บันทึกลง Cloud
+        logsRef.push(newEntry);
         
         document.getElementById('currentKH').value = '';
         document.getElementById('currentCa').value = '';
@@ -505,14 +378,10 @@
         document.getElementById('dosedKH').value = '';
         document.getElementById('dosedCa').value = '';
         document.getElementById('dosedMg').value = '';
-
-        updateApp();
     });
 
-    function deleteLog(id) {
-        reefLogs = reefLogs.filter(item => item.id !== id);
-        localStorage.setItem('reefLogs', JSON.stringify(reefLogs));
-        updateApp();
+    function deleteLog(key) {
+        logsRef.child(key).remove();
     }
 
     function updateApp() {
@@ -551,7 +420,7 @@
                 <td>${log.mg} ${diffMgText}</td>
                 <td>${log.no3}</td>
                 <td>${log.dosedKH || 0}/${log.dosedCa || 0}/${log.dosedMg || 0}</td>
-                <td><button class="btn-delete" onclick="deleteLog(${log.id})">ลบ</button></td>
+                <td><button class="btn-delete" onclick="deleteLog('${log.firebaseKey}')">ลบ</button></td>
             `;
             tbody.appendChild(tr);
         });
@@ -589,7 +458,6 @@
     }
 
     calculateSalt();
-    updateApp();
 </script>
 
 </body>
