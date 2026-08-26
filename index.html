@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ตู้ปลา 40L">
     
-    <title>ระบบบันทึกค่าน้ำตู้ปลา 40L (Cloud Sync)</title>
+    <title>ระบบบันทึกค่าน้ำตู้ปลา 40L (AF Hybrid Pro Salt)</title>
     
     <!-- โหลด Chart.js และ Firebase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -36,14 +36,13 @@
             padding-top: calc(env(safe-area-inset-top) + 15px);
             padding-bottom: calc(env(safe-area-inset-bottom) + 25px);
             min-height: 100vh;
-            /* เปลี่ยนภาพพื้นหลังเป็นธีมใต้มหาสมุทร โทน DARK */
             background: linear-gradient(to bottom, rgba(2, 6, 23, 0.85), rgba(3, 15, 38, 0.92)),
                         url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
             -webkit-tap-highlight-color: transparent;
         }
 
         .container { max-width: 1100px; margin: 0 auto; }
-        h1 { text-align: center; color: var(--primary); margin-bottom: 20px; font-size: 1.5rem; text-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
+        h1 { text-align: center; color: var(--primary); margin-bottom: 5px; font-size: 1.5rem; text-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
         
         .sync-status {
             text-align: center;
@@ -66,6 +65,10 @@
         .recommend-box { background: rgba(52, 211, 153, 0.1); border-left: 4px solid var(--accent-green); padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; }
         .dosing-item { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; }
         
+        .spec-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.75rem; text-align: center; }
+        .spec-table th { background: rgba(251, 191, 36, 0.2); color: var(--accent-gold); padding: 6px; }
+        .spec-table td { padding: 6px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+
         .chart-container { position: relative; height: 300px; margin-bottom: 20px; }
         .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.8rem; white-space: nowrap; }
@@ -98,34 +101,41 @@
                     <option value="tropicmarin">Tropic Marin (Balling Liquid)</option>
                 </select>
             </div>
-            <div class="form-row">
-                <div class="form-group" style="flex:1;">
-                    <label>เป้า KH:</label>
-                    <input type="number" step="0.1" id="targetKH" value="8.0" onchange="calculateDosing()">
-                </div>
-                <div class="form-group" style="flex:1;">
-                    <label>เป้า Ca:</label>
-                    <input type="number" id="targetCa" value="430" onchange="calculateDosing()">
-                </div>
-                <div class="form-group" style="flex:1;">
-                    <label>เป้า Mg:</label>
-                    <input type="number" id="targetMg" value="1380" onchange="calculateDosing()">
-                </div>
-            </div>
-
-            <label style="font-weight:600; color:var(--accent-gold); margin-top:10px; display:block;">ผสมเกลือเปลี่ยนน้ำ (AF Hybrid Pro):</label>
+            
+            <label style="font-weight:600; color:var(--accent-gold); margin-top:10px; display:block;">ผสมเกลือ AF Hybrid Pro Salt:</label>
             <div class="form-row">
                 <div class="form-group" style="flex:1;">
                     <label>น้ำเปลี่ยน (ลิตร):</label>
                     <input type="number" id="changeVolume" value="4" oninput="calculateSalt()">
                 </div>
                 <div class="form-group" style="flex:1;">
-                    <label>ความเค็ม (PPT):</label>
-                    <input type="number" id="targetSalinity" value="33" oninput="calculateSalt()">
+                    <label>ความเค็ม:</label>
+                    <select id="targetSalinity" onchange="calculateSalt(); autoSetTargetBySalt();">
+                        <option value="30">30 ppt</option>
+                        <option value="33" selected>33 ppt (มาตรฐาน)</option>
+                        <option value="35">35 ppt</option>
+                    </select>
                 </div>
             </div>
+
             <div class="salt-box">
-                <div class="dosing-item"><span>น้ำหนักเกลือ AF:</span><strong id="saltGrams" style="color:var(--accent-gold);">0 กรัม</strong></div>
+                <div class="dosing-item"><span>น้ำหนักเกลือที่ต้องใช้:</span><strong id="saltGrams" style="color:var(--accent-gold);">0 กรัม</strong></div>
+                <div class="dosing-item"><span style="font-size:0.75rem; color:var(--text-muted);">ช่วงค่าน้ำเกลือใหม่:</span><span id="saltSpecText" style="font-size:0.75rem; color:var(--text-muted);">-</span></div>
+            </div>
+
+            <div class="form-row" style="margin-top:10px;">
+                <div class="form-group" style="flex:1;">
+                    <label>เป้า KH:</label>
+                    <input type="number" step="0.1" id="targetKH" value="7.5" onchange="calculateDosing()">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>เป้า Ca:</label>
+                    <input type="number" id="targetCa" value="395" onchange="calculateDosing()">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>เป้า Mg:</label>
+                    <input type="number" id="targetMg" value="1265" onchange="calculateDosing()">
+                </div>
             </div>
         </div>
 
@@ -140,7 +150,7 @@
                 <div class="form-row">
                     <div class="form-group" style="flex:1;">
                         <label>KH (dKH):</label>
-                        <input type="number" step="0.1" id="currentKH" placeholder="7.8" required oninput="calculateDosing()">
+                        <input type="number" step="0.1" id="currentKH" placeholder="7.5" required oninput="calculateDosing()">
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label>โดสไป (mL):</label>
@@ -150,7 +160,7 @@
                 <div class="form-row">
                     <div class="form-group" style="flex:1;">
                         <label>Ca (ppm):</label>
-                        <input type="number" id="currentCa" placeholder="420" required oninput="calculateDosing()">
+                        <input type="number" id="currentCa" placeholder="400" required oninput="calculateDosing()">
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label>โดสไป (mL):</label>
@@ -160,7 +170,7 @@
                 <div class="form-row">
                     <div class="form-group" style="flex:1;">
                         <label>Mg (ppm):</label>
-                        <input type="number" id="currentMg" placeholder="1350" required oninput="calculateDosing()">
+                        <input type="number" id="currentMg" placeholder="1260" required oninput="calculateDosing()">
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label>โดสไป (mL):</label>
@@ -175,9 +185,9 @@
             </form>
         </div>
 
-        <!-- 3. แนะนำโดส -->
+        <!-- 3. แนะนำโดส & อ้างอิง AF -->
         <div class="card">
-            <h2>3. แนะนำปริมาณโดส</h2>
+            <h2>3. แนะนำปริมาณโดส & อ้างอิงเกลือ</h2>
             <label style="font-weight:600; color:var(--primary);">โดสเพื่อปรับเข้าสู่เป้าหมาย:</label>
             <div class="dosing-result">
                 <div class="dosing-item"><span>KH Buffer:</span><strong id="doseKH">0 ml</strong></div>
@@ -185,12 +195,31 @@
                 <div class="dosing-item"><span>Magnesium:</span><strong id="doseMg">0 ml</strong></div>
             </div>
 
-            <label style="font-weight:600; color:var(--accent-green); margin-top:12px; display:block;">แนะนำโดสประคองรายวัน:</label>
+            <label style="font-weight:600; color:var(--accent-green); margin-top:10px; display:block;">แนะนำโดสประคองรายวัน:</label>
             <div class="recommend-box">
                 <div class="dosing-item"><span>KH (ประจำวัน):</span><strong id="recKH" style="color:var(--accent-green)">- ml/วัน</strong></div>
                 <div class="dosing-item"><span>Ca (ประจำวัน):</span><strong id="recCa" style="color:var(--accent-green)">- ml/วัน</strong></div>
                 <div class="dosing-item"><span>Mg (ประจำวัน):</span><strong id="recMg" style="color:var(--accent-green)">- ml/วัน</strong></div>
             </div>
+
+            <!-- ตารางอ้างอิง AF Hybrid Pro -->
+            <label style="font-weight:600; color:var(--accent-gold); margin-top:10px; display:block;">ตารางสเปก AF Hybrid Pro Salt:</label>
+            <table class="spec-table">
+                <thead>
+                    <tr>
+                        <th>Salinity</th>
+                        <th>Alk (dKH)</th>
+                        <th>Ca (mg/l)</th>
+                        <th>Mg (mg/l)</th>
+                        <th>K (mg/l)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>30 ppt</td><td>6.4 - 7.3</td><td>359 - 375</td><td>1120 - 1190</td><td>310 - 330</td></tr>
+                    <tr><td>33 ppt</td><td>7.3 - 7.6</td><td>380 - 410</td><td>1230 - 1300</td><td>340 - 360</td></tr>
+                    <tr><td>35 ppt</td><td>7.7 - 8.4</td><td>415 - 440</td><td>1310 - 1380</td><td>380 - 400</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -235,6 +264,13 @@
     };
     // -------------------------------------------------------------
 
+    // ข้อมูลมาตรฐาน Aquaforest Hybrid Pro Salt
+    const afSaltSpecs = {
+        30: { khMin: 6.4, khMax: 7.3, caMin: 359, caMax: 375, mgMin: 1120, mgMax: 1190, kMin: 310, kMax: 330, avgKH: 6.8, avgCa: 367, avgMg: 1155 },
+        33: { khMin: 7.3, khMax: 7.6, caMin: 380, caMax: 410, mgMin: 1230, mgMax: 1300, kMin: 340, kMax: 360, avgKH: 7.5, avgCa: 395, avgMg: 1265 },
+        35: { khMin: 7.7, khMax: 8.4, caMin: 415, caMax: 440, mgMin: 1310, mgMax: 1380, kMin: 380, kMax: 400, avgKH: 8.0, avgCa: 427, avgMg: 1345 }
+    };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const logsRef = db.ref('reefLogs');
@@ -243,7 +279,6 @@
     let reefLogs = [];
     let myChart = null;
 
-    // ดึงข้อมูล Realtime จาก Cloud (ซิงค์อัตโนมัติทุกเครื่อง)
     logsRef.on('value', (snapshot) => {
         const data = snapshot.val();
         reefLogs = [];
@@ -259,9 +294,29 @@
 
     function calculateSalt() {
         const changeVol = parseFloat(document.getElementById('changeVolume').value) || 0;
-        const targetPPT = parseFloat(document.getElementById('targetSalinity').value) || 33;
+        const targetPPT = parseInt(document.getElementById('targetSalinity').value) || 33;
+        
+        // คำนวณน้ำหนักเกลือ AF (ประมาณ 1.1515g / L / PPT)
         const saltGrams = changeVol * targetPPT * 1.1515;
         document.getElementById('saltGrams').innerText = saltGrams.toFixed(1) + ' กรัม';
+
+        // แสดงสเปกค่าน้ำเกลือใหม่
+        const spec = afSaltSpecs[targetPPT];
+        if (spec) {
+            document.getElementById('saltSpecText').innerText = `KH ${spec.khMin}-${spec.khMax} | Ca ${spec.caMin}-${spec.caMax} | Mg ${spec.mgMin}-${spec.mgMax}`;
+        }
+    }
+
+    // อัปเดตเป้าหมายค่าน้ำตามความเค็มที่เลือกให้อัตโนมัติ
+    function autoSetTargetBySalt() {
+        const ppt = parseInt(document.getElementById('targetSalinity').value) || 33;
+        const spec = afSaltSpecs[ppt];
+        if (spec) {
+            document.getElementById('targetKH').value = spec.avgKH;
+            document.getElementById('targetCa').value = spec.avgCa;
+            document.getElementById('targetMg').value = spec.avgMg;
+            calculateDosing();
+        }
     }
 
     function calculateDosing() {
@@ -369,7 +424,6 @@
             dosedMg: parseFloat(document.getElementById('dosedMg').value) || 0
         };
 
-        // บันทึกลง Cloud
         logsRef.push(newEntry);
         
         document.getElementById('currentKH').value = '';
