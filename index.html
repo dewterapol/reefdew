@@ -60,6 +60,7 @@
         label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-muted); }
         input, select { width: 100%; padding: 10px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 10px; font-size: 16px; color: #fff; box-sizing: border-box; }
         button { width: 100%; background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-secondary { background: linear-gradient(135deg, #059669, #10b981); margin-top: 8px; padding: 10px; font-size: 0.85rem; }
         
         .dosing-result { background: rgba(56, 189, 248, 0.08); border-left: 4px solid var(--primary); padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; }
         .salt-box { background: rgba(251, 191, 36, 0.08); border-left: 4px solid var(--accent-gold); padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; }
@@ -81,7 +82,6 @@
         
         .val-up { color: #34d399; font-size: 0.75rem; }
         .val-down { color: #f87171; font-size: 0.75rem; }
-        .val-warning { color: #fbbf24; font-size: 0.75rem; font-weight: bold; }
         
         .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
         .badge-success { background: rgba(52, 211, 153, 0.2); color: #34d399; }
@@ -100,7 +100,7 @@
     <div class="grid">
         <!-- 1. ตั้งค่า -->
         <div class="card">
-            <h2>1. ตั้งค่าระบบและเกลือ</h2>
+            <h2>1. ตั้งค่าระบบและเป้าหมายค่าน้ำ</h2>
             <div class="form-group">
                 <label>ปริมาณน้ำในระบบ (ลิตร):</label>
                 <input type="number" id="waterVolume" value="40" onchange="calculateDosing(); calculateSalt();">
@@ -127,7 +127,8 @@
                 <div class="dosing-item"><span style="font-size:0.75rem; color:var(--text-muted);">ช่วงค่าน้ำเกลือใหม่:</span><span id="saltSpecText" style="font-size:0.75rem; color:var(--text-muted);">-</span></div>
             </div>
 
-            <div class="form-row" style="margin-top:10px;">
+            <label style="font-weight:600; color:var(--primary); margin-top:12px; display:block;">ตั้งค่าเป้าหมายค่าน้ำ (Target):</label>
+            <div class="form-row">
                 <div class="form-group" style="flex:1;">
                     <label>เป้า KH:</label>
                     <input type="number" step="0.1" id="targetKH" value="7.5" onchange="calculateDosing()">
@@ -141,6 +142,7 @@
                     <input type="number" id="targetMg" value="1265" onchange="calculateDosing()">
                 </div>
             </div>
+            <button type="button" class="btn-secondary" onclick="saveTargetSettings()">💾 บันทึกเป้าหมายค่าน้ำไว้ในระบบ</button>
         </div>
 
         <!-- 2. บันทึก -->
@@ -277,12 +279,11 @@
     };
     // -------------------------------------------------------------
 
-    // ลิมิตการปรับเปลี่ยนค่าน้ำที่ปลอดภัยต่อวัน
     const LIMITS = {
-        MAX_KH_PER_DAY: 0.5,   // ไม่ควรขึ้น/ลงเกิน 0.5 dKH ต่อวัน
-        MAX_CA_PER_DAY: 20,    // ไม่ควรขึ้น/ลงเกิน 20 ppm ต่อวัน
-        MAX_MG_PER_DAY: 50,    // ไม่ควรขึ้น/ลงเกิน 50 ppm ต่อวัน
-        MAX_NO3_PER_DAY: 5.0   // ไม่ควรแกว่งเกิน 5 ppm ต่อวัน
+        MAX_KH_PER_DAY: 0.5,
+        MAX_CA_PER_DAY: 20,
+        MAX_MG_PER_DAY: 50,
+        MAX_NO3_PER_DAY: 5.0
     };
 
     const afSaltSpecs = {
@@ -294,11 +295,27 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const logsRef = db.ref('reefLogs');
+    const targetRef = db.ref('reefTargetSettings');
 
     document.getElementById('logDate').valueAsDate = new Date();
     let reefLogs = [];
     let myChart = null;
 
+    // โหลดเป้าหมายที่บันทึกไว้ใน Firebase Cloud
+    targetRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            if (data.waterVolume) document.getElementById('waterVolume').value = data.waterVolume;
+            if (data.targetSalinity) document.getElementById('targetSalinity').value = data.targetSalinity;
+            if (data.targetKH) document.getElementById('targetKH').value = data.targetKH;
+            if (data.targetCa) document.getElementById('targetCa').value = data.targetCa;
+            if (data.targetMg) document.getElementById('targetMg').value = data.targetMg;
+            calculateSalt();
+            calculateDosing();
+        }
+    });
+
+    // โหลดประวัติค่าน้ำ
     logsRef.on('value', (snapshot) => {
         const data = snapshot.val();
         reefLogs = [];
@@ -311,6 +328,22 @@
         updateApp();
         document.getElementById('syncStatus').innerText = '☁️ ซิงค์ข้อมูลข้ามเครื่องเรียบร้อยแล้ว';
     });
+
+    function saveTargetSettings() {
+        const targetData = {
+            waterVolume: parseFloat(document.getElementById('waterVolume').value) || 40,
+            targetSalinity: document.getElementById('targetSalinity').value,
+            targetKH: parseFloat(document.getElementById('targetKH').value) || 7.5,
+            targetCa: parseFloat(document.getElementById('targetCa').value) || 395,
+            targetMg: parseFloat(document.getElementById('targetMg').value) || 1265
+        };
+
+        targetRef.set(targetData).then(() => {
+            alert('✅ บันทึกเป้าหมายค่าน้ำลงระบบ Cloud เรียบร้อยแล้ว!');
+        }).catch((err) => {
+            alert('❌ เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
+        });
+    }
 
     function calculateSalt() {
         const changeVol = parseFloat(document.getElementById('changeVolume').value) || 0;
@@ -353,7 +386,6 @@
 
         let alerts = [];
 
-        // คำนวณโดส KH
         if (diffKH > 0 && volume > 0) {
             let totalDoseKH = (diffKH * volume) / 50;
             document.getElementById('doseKH').innerText = totalDoseKH.toFixed(2) + ' ml';
@@ -371,7 +403,6 @@
             document.getElementById('doseKHPlan').innerText = diffKH < 0 ? 'ค่าน้ำสูงกว่าเป้าหมาย' : 'ตรงตามเป้าหมาย';
         }
 
-        // คำนวณโดส Ca
         if (diffCa > 0 && volume > 0) {
             let totalDoseCa = (diffCa * volume) / 45;
             document.getElementById('doseCa').innerText = totalDoseCa.toFixed(2) + ' ml';
@@ -389,7 +420,6 @@
             document.getElementById('doseCaPlan').innerText = diffCa < 0 ? 'ค่าน้ำสูงกว่าเป้าหมาย' : 'ตรงตามเป้าหมาย';
         }
 
-        // คำนวณโดส Mg
         if (diffMg > 0 && volume > 0) {
             let totalDoseMg = (diffMg * volume) / 20;
             document.getElementById('doseMg').innerText = totalDoseMg.toFixed(2) + ' ml';
@@ -407,7 +437,6 @@
             document.getElementById('doseMgPlan').innerText = diffMg < 0 ? 'ค่าน้ำสูงกว่าเป้าหมาย' : 'ตรงตามเป้าหมาย';
         }
 
-        // แสดง Alert แจ้งเตือนความปลอดภัย
         const alertBox = document.getElementById('safetyAlert');
         if (alerts.length > 0) {
             alertBox.style.display = 'block';
@@ -436,7 +465,6 @@
             const prev = reefLogs[i - 1];
             const curr = reefLogs[i];
 
-            // คำนวณวันต่างจริง
             const daysDiff = (new Date(curr.date) - new Date(prev.date)) / (1000 * 60 * 60 * 24);
             if (daysDiff > 0) {
                 totalDropKH += Math.max(0, (prev.kh - curr.kh) / daysDiff);
