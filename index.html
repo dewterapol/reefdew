@@ -28,7 +28,6 @@
             --accent-gold: #fbbf24;
             --accent-red: #f87171;
             
-            /* Dynamic Ambient Colors */
             --ambient-color: rgba(56, 189, 248, 0.3);
             --ambient-glow: 0 0 25px rgba(56, 189, 248, 0.4);
         }
@@ -49,7 +48,6 @@
 
         .container { max-width: 1100px; margin: 0 auto; }
         
-        /* Header Box พร้อม Ambient Light Glow */
         .header-box {
             position: relative;
             text-align: center;
@@ -98,11 +96,7 @@
             margin-bottom: 5px;
         }
 
-        .sync-status {
-            text-align: center;
-            font-size: 0.8rem;
-            color: var(--accent-green);
-        }
+        .sync-status { text-align: center; font-size: 0.8rem; color: var(--accent-green); }
 
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .card { background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 16px; border-radius: 16px; border: 1px solid var(--card-border); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
@@ -142,9 +136,7 @@
         
         .btn-delete { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; width: auto; }
 
-        /* =================================================== */
-        /* STYLES: Draggable Clownfish Widget & Speech Bubble  */
-        /* =================================================== */
+        /* Draggable Clownfish Widget */
         #clownfishContainer {
             position: fixed;
             bottom: 30px;
@@ -159,11 +151,8 @@
             transition: opacity 0.5s ease, transform 0.2s ease;
         }
 
-        #clownfishContainer:active {
-            cursor: grabbing;
-        }
+        #clownfishContainer:active { cursor: grabbing; }
 
-        /* Speech Bubble (กรอบคำพูดหิวข้าว) */
         .speech-bubble {
             position: relative;
             background: #ffffff;
@@ -192,7 +181,6 @@
             width: 0;
         }
 
-        /* Clownfish SVG Avatar */
         .clownfish-avatar {
             width: 65px;
             height: 65px;
@@ -201,9 +189,7 @@
             transition: transform 0.2s ease;
         }
 
-        .clownfish-avatar:hover {
-            transform: scale(1.1);
-        }
+        .clownfish-avatar:hover { transform: scale(1.1); }
 
         @keyframes swimFloat {
             0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -218,33 +204,25 @@
 </head>
 <body>
 
-<!-- WIDGET: ปลาการ์ตูนลากได้ + เตือนให้อาหาร -->
 <div id="clownfishContainer">
     <div id="fishBubble" class="speech-bubble" style="display: none;">
         🥣 หิวแล้วครับ! ให้อาหารพวกเราด้วยนะ (8:00-11:00) 🐠✨
     </div>
-    <!-- SVG Vector รูปปลาการ์ตูน (Clownfish) -->
     <svg class="clownfish-avatar" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
         <path d="M 20,50 Q 5,30 8,50 Q 5,70 20,50 Z" fill="#FF6B00" stroke="#000" stroke-width="2.5"/>
         <path d="M 14,38 Q 8,50 14,62" fill="none" stroke="#FFF" stroke-width="3"/>
         <path d="M 10,40 Q 5,50 10,60" fill="none" stroke="#000" stroke-width="2"/>
-
         <path d="M 45,25 Q 55,10 65,22 Z" fill="#FF6B00" stroke="#000" stroke-width="2.5"/>
         <path d="M 45,75 Q 55,90 65,78 Z" fill="#FF6B00" stroke="#000" stroke-width="2.5"/>
-
         <ellipse cx="55" cy="50" rx="35" ry="25" fill="#FF6B00" stroke="#000" stroke-width="2.5"/>
-
         <path d="M 32,32 Q 35,50 32,68 Q 27,65 27,35 Z" fill="#FFFFFF" stroke="#000" stroke-width="2"/>
         <path d="M 52,25 Q 57,50 52,75 Q 45,72 45,28 Z" fill="#FFFFFF" stroke="#000" stroke-width="2"/>
         <path d="M 72,28 Q 77,50 72,71 Q 67,67 67,33 Z" fill="#FFFFFF" stroke="#000" stroke-width="2"/>
-
         <path d="M 48,52 Q 40,60 48,65 Z" fill="#FF851B" stroke="#000" stroke-width="2"/>
         <path d="M 46,55 Q 42,60 46,63" fill="none" stroke="#FFF" stroke-width="2"/>
-
         <circle cx="78" cy="44" r="6" fill="#FFFFFF" stroke="#000" stroke-width="1.5"/>
         <circle cx="79" cy="44" r="3" fill="#000000"/>
         <circle cx="80.5" cy="42.5" r="1" fill="#FFFFFF"/>
-
         <path d="M 85,52 Q 82,56 87,57" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
     </svg>
 </div>
@@ -265,25 +243,35 @@
                 <input type="number" id="waterVolume" value="40" onchange="calculateDosing(); calculateSalt();">
             </div>
             
-            <label style="font-weight:600; color:var(--accent-gold); margin-top:10px; display:block;">ผสมเกลือ AF Hybrid Pro Salt:</label>
+            <label style="font-weight:600; color:var(--accent-gold); margin-top:10px; display:block;">คำนวณผสมเกลือ AF Hybrid Pro Salt (390g / 10L):</label>
             <div class="form-row">
                 <div class="form-group" style="flex:1;">
                     <label>น้ำเปลี่ยน (ลิตร):</label>
                     <input type="number" id="changeVolume" value="4" oninput="calculateSalt()">
                 </div>
                 <div class="form-group" style="flex:1;">
-                    <label>ความเค็ม:</label>
+                    <label>ความเค็มเป้าหมาย:</label>
                     <select id="targetSalinity" onchange="calculateSalt(); autoSetTargetBySalt();">
-                        <option value="30">30 ppt</option>
-                        <option value="33" selected>33 ppt (มาตรฐาน)</option>
-                        <option value="35">35 ppt</option>
+                        <option value="30">30 ppt (1.022 S.G.)</option>
+                        <option value="33" selected>33 ppt (1.025 S.G.)</option>
+                        <option value="35">35 ppt (1.026 S.G.)</option>
                     </select>
                 </div>
             </div>
 
             <div class="salt-box">
-                <div class="dosing-item"><span>ปริมาตรเกลือที่ต้องใช้:</span><strong id="saltML" style="color:var(--accent-gold);">0 ml</strong></div>
-                <div class="dosing-item"><span style="font-size:0.75rem; color:var(--text-muted);">ช่วงค่าน้ำเกลือใหม่:</span><span id="saltSpecText" style="font-size:0.75rem; color:var(--text-muted);">-</span></div>
+                <div class="dosing-item">
+                    <span>น้ำหนักเกลือที่ต้องใช้:</span>
+                    <strong id="saltGram" style="color:var(--accent-gold); font-size: 1.1rem;">0 กรัม</strong>
+                </div>
+                <div class="dosing-item">
+                    <span style="font-size:0.75rem; color:var(--text-muted);">อัตราส่วนที่ใช้:</span>
+                    <span id="saltRatioText" style="font-size:0.75rem; color:var(--text-muted);">39 กรัม / น้ำ 1 ลิตร</span>
+                </div>
+                <div class="dosing-item" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:6px;">
+                    <span style="font-size:0.75rem; color:var(--text-muted);">ค่าน้ำเกลือใหม่:</span>
+                    <span id="saltSpecText" style="font-size:0.75rem; color:var(--text-muted);">-</span>
+                </div>
             </div>
 
             <label style="font-weight:600; color:var(--primary); margin-top:12px; display:block;">ตั้งค่าเป้าหมายค่าน้ำ (Target):</label>
@@ -425,10 +413,10 @@
 
 <script>
     // -------------------------------------------------------------
-    // นำคีย์จาก Firebase มาวางแทนที่ตรงนี้
+    // Firebase Config
     // -------------------------------------------------------------
     const firebaseConfig = {
-        apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
+       apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
   authDomain: "dewreef-838de.firebaseapp.com",
   databaseURL: "https://dewreef-838de-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "dewreef-838de",
@@ -436,7 +424,6 @@
   messagingSenderId: "219612211355",
   appId: "1:219612211355:web:9275b47ae7ebc997977e3e"
     };
-    // -------------------------------------------------------------
 
     const LIMITS = {
         MAX_KH_PER_DAY: 0.5,
@@ -446,9 +433,9 @@
     };
 
     const afSaltSpecs = {
-        30: { khMin: 6.4, khMax: 7.3, caMin: 359, caMax: 375, mgMin: 1120, mgMax: 1190, kMin: 310, kMax: 330, avgKH: 6.8, avgCa: 367, avgMg: 1155 },
-        33: { khMin: 7.3, khMax: 7.6, caMin: 380, caMax: 410, mgMin: 1230, mgMax: 1300, kMin: 340, kMax: 360, avgKH: 7.5, avgCa: 395, avgMg: 1265 },
-        35: { khMin: 7.7, khMax: 8.4, caMin: 415, caMax: 440, mgMin: 1310, mgMax: 1380, kMin: 380, kMax: 400, avgKH: 8.0, avgCa: 427, avgMg: 1345 }
+        30: { ratio: 35.5, khMin: 6.4, khMax: 7.3, caMin: 359, caMax: 375, mgMin: 1120, mgMax: 1190, avgKH: 6.8, avgCa: 367, avgMg: 1155 },
+        33: { ratio: 39.0, khMin: 7.3, khMax: 7.6, caMin: 380, caMax: 410, mgMin: 1230, mgMax: 1300, avgKH: 7.5, avgCa: 395, avgMg: 1265 },
+        35: { ratio: 41.3, khMin: 7.7, khMax: 8.4, caMin: 415, caMax: 440, mgMin: 1310, mgMax: 1380, avgKH: 8.0, avgCa: 427, avgMg: 1345 }
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -460,15 +447,10 @@
     let reefLogs = [];
     let myChart = null;
 
-    // -------------------------------------------------------------
-    // 1. ระบบ Ambient Light คำนวณตามเวลาไฟตู้ปลา (7:30 - 22:30 น.)
-    // -------------------------------------------------------------
+    // Ambient Light Control
     function updateAmbientLight() {
         const now = new Date();
-        const hours = now.getHours();
-        const minutes = now.getMinutes();
-        const currentTime = hours + minutes / 60;
-
+        const currentTime = now.getHours() + now.getMinutes() / 60;
         const root = document.documentElement;
         const lightBadge = document.getElementById('lightBadge');
 
@@ -495,9 +477,7 @@
         }
     }
 
-    // -------------------------------------------------------------
-    // 2. ระบบแจ้งเตือนให้อาหาร (8:00 - 11:00 น.) & Double Click ซ่อนปลา
-    // -------------------------------------------------------------
+    // Feeding Alert System
     const fishContainer = document.getElementById('clownfishContainer');
     const fishBubble = document.getElementById('fishBubble');
 
@@ -507,13 +487,11 @@
         const todayStr = now.toDateString();
         const lastFedDate = localStorage.getItem('fishFedDate');
 
-        // หากเคยกดให้อาหาร (Double Click) ในวันนี้ไปแล้ว ให้ซ่อนทั้งหมด
         if (lastFedDate === todayStr) {
             fishContainer.style.display = 'none';
             return;
         }
 
-        // เช็คช่วงเวลา 08:00 - 11:00 น.
         if (hours >= 8 && hours < 11) {
             fishContainer.style.display = 'flex';
             fishBubble.style.display = 'block';
@@ -523,17 +501,15 @@
         }
     }
 
-    // ฟังชัน Double Click หรือ Double Tap ที่ตัวปลาเพื่อซ่อน
     let lastTapTime = 0;
     function handleFishDoubleTap(e) {
         const currentTime = new Date().getTime();
         const tapLength = currentTime - lastTapTime;
 
-        if (tapLength < 300 && tapLength > 0) { // หากมีการกดติดกัน 2 ครั้งภายใน 300ms
+        if (tapLength < 300 && tapLength > 0) {
             const todayStr = new Date().toDateString();
-            localStorage.setItem('fishFedDate', todayStr); // บันทึกว่าวันนี้ให้อาหารแล้ว
+            localStorage.setItem('fishFedDate', todayStr);
             
-            // เอฟเฟกต์ค่อยๆ จางหาย
             fishContainer.style.opacity = '0';
             setTimeout(() => {
                 fishContainer.style.display = 'none';
@@ -555,11 +531,8 @@
         }, 500);
     });
 
-    // -------------------------------------------------------------
-    // 3. ระบบลากน้องปลาการ์ตูน (Draggable Clownfish Engine)
-    // -------------------------------------------------------------
-    let isDragging = false;
-    let hasMoved = false;
+    // Draggable Fish Widget Engine
+    let isDragging = false, hasMoved = false;
     let currentX, currentY, initialX, initialY;
     let xOffset = 0, yOffset = 0;
 
@@ -608,20 +581,14 @@
         initialX = currentX;
         initialY = currentY;
         isDragging = false;
-
-        // ถ้าไม่ได้ลาก (เป็นการแตะสั้นๆ) ให้ส่งไปเช็ค Double Tap สำหรับมือถือ
-        if (!hasMoved) {
-            handleFishDoubleTap(e);
-        }
+        if (!hasMoved) handleFishDoubleTap(e);
     }
 
-    // รันการตรวจสอบเวลา
     updateAmbientLight();
     updateFeedingAlert();
     setInterval(updateAmbientLight, 60000);
     setInterval(updateFeedingAlert, 60000);
 
-    // โหลดเป้าหมายที่บันทึกไว้ใน Firebase Cloud
     targetRef.on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -635,7 +602,6 @@
         }
     });
 
-    // โหลดประวัติค่าน้ำ
     logsRef.on('value', (snapshot) => {
         const data = snapshot.val();
         reefLogs = [];
@@ -665,15 +631,18 @@
         });
     }
 
+    // -------------------------------------------------------------
+    // คำนวณปริมาณเกลือ AF Hybrid Pro Salt (390g / 10L = 39g/L ที่ 33ppt)
+    // -------------------------------------------------------------
     function calculateSalt() {
         const changeVol = parseFloat(document.getElementById('changeVolume').value) || 0;
         const targetPPT = parseInt(document.getElementById('targetSalinity').value) || 33;
         
-        const saltML = changeVol * targetPPT * 1.0;
-        document.getElementById('saltML').innerText = saltML.toFixed(0) + ' ml';
-
         const spec = afSaltSpecs[targetPPT];
         if (spec) {
+            const saltGram = changeVol * spec.ratio;
+            document.getElementById('saltGram').innerText = saltGram.toFixed(1) + ' กรัม (g)';
+            document.getElementById('saltRatioText').innerText = `${spec.ratio} กรัม / น้ำ 1 ลิตร`;
             document.getElementById('saltSpecText').innerText = `KH ${spec.khMin}-${spec.khMax} | Ca ${spec.caMin}-${spec.caMax} | Mg ${spec.mgMin}-${spec.mgMax}`;
         }
     }
@@ -777,14 +746,12 @@
         }
 
         const volume = parseFloat(document.getElementById('waterVolume').value) || 0;
-
         let totalDropKH = 0, totalDropCa = 0, totalDropMg = 0;
         let count = 0;
 
         for (let i = 1; i < reefLogs.length; i++) {
             const prev = reefLogs[i - 1];
             const curr = reefLogs[i];
-
             const daysDiff = (new Date(curr.date) - new Date(prev.date)) / (1000 * 60 * 60 * 24);
             if (daysDiff > 0) {
                 totalDropKH += Math.max(0, (prev.kh - curr.kh) / daysDiff);
@@ -799,7 +766,6 @@
         const avgDropMg = count > 0 ? totalDropMg / count : 0;
 
         let reqKH = 0, reqCa = 0, reqMg = 0;
-
         if (volume > 0) {
             reqKH = (avgDropKH * volume) / 50;
             reqCa = (avgDropCa * volume) / 45;
@@ -850,7 +816,6 @@
     function renderTable() {
         const tbody = document.getElementById('historyTable');
         tbody.innerHTML = '';
-
         const reversedLogs = [...reefLogs].reverse();
 
         reversedLogs.forEach((log, index) => {
@@ -862,7 +827,6 @@
 
             if (prevLog) {
                 const daysDiff = Math.max(1, (new Date(log.date) - new Date(prevLog.date)) / (1000 * 60 * 60 * 24));
-                
                 const dKH = log.kh - prevLog.kh;
                 const dCa = log.ca - prevLog.ca;
                 const dMg = log.mg - prevLog.mg;
