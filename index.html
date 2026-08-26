@@ -27,6 +27,10 @@
             --accent-purple: #c084fc;
             --accent-gold: #fbbf24;
             --accent-red: #f87171;
+            
+            /* Dynamic Ambient Colors */
+            --ambient-color: rgba(56, 189, 248, 0.3);
+            --ambient-glow: 0 0 25px rgba(56, 189, 248, 0.4);
         }
 
         body {
@@ -40,15 +44,63 @@
             background: linear-gradient(to bottom, rgba(3, 10, 25, 0.85), rgba(2, 6, 18, 0.93)),
                         url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
             -webkit-tap-highlight-color: transparent;
+            transition: background 1s ease;
         }
 
         .container { max-width: 1100px; margin: 0 auto; }
-        h1 { text-align: center; color: var(--primary); margin-bottom: 5px; font-size: 1.5rem; text-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
         
+        /* Header Box พร้อม Ambient Light Glow */
+        .header-box {
+            position: relative;
+            text-align: center;
+            padding: 20px;
+            border-radius: 20px;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--ambient-color);
+            box-shadow: var(--ambient-glow);
+            margin-bottom: 15px;
+            transition: all 1s ease;
+            overflow: hidden;
+        }
+
+        .header-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, var(--ambient-color) 0%, transparent 60%);
+            opacity: 0.5;
+            animation: pulseGlow 6s infinite alternate ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(0.95); opacity: 0.3; }
+            100% { transform: scale(1.05); opacity: 0.7; }
+        }
+
+        h1 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.5rem; text-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
+        
+        .light-status-bar {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 5px;
+        }
+
         .sync-status {
             text-align: center;
             font-size: 0.8rem;
-            margin-bottom: 15px;
             color: var(--accent-green);
         }
 
@@ -94,8 +146,11 @@
 <body>
 
 <div class="container">
-    <h1>ระบบบันทึกค่าน้ำตู้ 40L (AF Hybrid Pro)</h1>
-    <div class="sync-status" id="syncStatus">☁️ เชื่อมต่อระบบ Cloud Sync เรียบร้อย</div>
+    <div class="header-box" id="headerBox">
+        <h1>ระบบบันทึกค่าน้ำตู้ 40L (AF Hybrid Pro)</h1>
+        <div class="light-status-bar" id="lightBadge">💡 กำลังโหลดสถานะแสงไฟ...</div>
+        <div class="sync-status" id="syncStatus">☁️ เชื่อมต่อระบบ Cloud Sync เรียบร้อย</div>
+    </div>
 
     <div class="grid">
         <!-- 1. ตั้งค่า -->
@@ -300,6 +355,50 @@
     document.getElementById('logDate').valueAsDate = new Date();
     let reefLogs = [];
     let myChart = null;
+
+    // -------------------------------------------------------------
+    // ฟังก์ชัน Ambient Light คำนวณตามเวลาไฟตู้ปลา (7:30 - 22:30 น.)
+    // -------------------------------------------------------------
+    function updateAmbientLight() {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const currentTime = hours + minutes / 60; // แปลงเป็นเวลาทศนิยม
+
+        const root = document.documentElement;
+        const lightBadge = document.getElementById('lightBadge');
+
+        // ไฟเปิด 07:30 น. (7.5) ถึง 22:30 น. (22.5)
+        if (currentTime >= 7.5 && currentTime < 8.5) {
+            // ช่วงไฟพระอาทิตย์ขึ้น (Sunrise / Dawn) 7:30 - 8:30 น.
+            root.style.setProperty('--ambient-color', 'rgba(251, 146, 60, 0.5)');
+            root.style.setProperty('--ambient-glow', '0 0 30px rgba(251, 146, 60, 0.6)');
+            lightBadge.innerHTML = '🌅 <b>เปิดไฟตู้ปลา:</b> โหมดพระอาทิตย์ขึ้น (Sunrise)';
+            lightBadge.style.color = '#fb923c';
+        } else if (currentTime >= 8.5 && currentTime < 20.5) {
+            // ช่วงไฟกลางวันเต็มที่ (Full Reef Daylight) 8:30 - 20:30 น.
+            root.style.setProperty('--ambient-color', 'rgba(56, 189, 248, 0.5)');
+            root.style.setProperty('--ambient-glow', '0 0 35px rgba(56, 189, 248, 0.7)');
+            lightBadge.innerHTML = '☀️ <b>เปิดไฟตู้ปลา:</b> โหมดกลางวัน (Daylight 100%)';
+            lightBadge.style.color = '#38bdf8';
+        } else if (currentTime >= 20.5 && currentTime < 22.5) {
+            // ช่วงไฟเย็น / เรืองแสง (Actinic / Sunset) 20:30 - 22:30 น.
+            root.style.setProperty('--ambient-color', 'rgba(168, 85, 247, 0.6)');
+            root.style.setProperty('--ambient-glow', '0 0 35px rgba(168, 85, 247, 0.8)');
+            lightBadge.innerHTML = '🌙 <b>เปิดไฟตู้ปลา:</b> โหมดแสงบลูเรืองแสง (Actinic Blue)';
+            lightBadge.style.color = '#c084fc';
+        } else {
+            // ปิดไฟตู้ปลา (Night Off) 22:30 - 07:30 น.
+            root.style.setProperty('--ambient-color', 'rgba(30, 41, 59, 0.3)');
+            root.style.setProperty('--ambient-glow', '0 0 15px rgba(15, 23, 42, 0.5)');
+            lightBadge.innerHTML = '🌑 <b>ปิดไฟตู้ปลา:</b> โหมดกลางคืน (Night Off)';
+            lightBadge.style.color = '#94a3b8';
+        }
+    }
+
+    // อัปเดตแสง Ambient Light ทันทีและทุกๆ 1 นาที
+    updateAmbientLight();
+    setInterval(updateAmbientLight, 60000);
 
     // โหลดเป้าหมายที่บันทึกไว้ใน Firebase Cloud
     targetRef.on('value', (snapshot) => {
