@@ -156,6 +156,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            transition: opacity 0.5s ease, transform 0.2s ease;
         }
 
         #clownfishContainer:active {
@@ -220,40 +221,30 @@
 <!-- WIDGET: ปลาการ์ตูนลากได้ + เตือนให้อาหาร -->
 <div id="clownfishContainer">
     <div id="fishBubble" class="speech-bubble" style="display: none;">
-        🥣 หิวแล้วครับ! อย่าลืมให้อาหารพวกเราตอนเช้านะ 🐠✨
+        🥣 หิวแล้วครับ! ให้อาหารพวกเราด้วยนะ (8:00-11:00) 🐠✨
     </div>
     <!-- SVG Vector รูปปลาการ์ตูน (Clownfish) -->
     <svg class="clownfish-avatar" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <!-- Tail Fin -->
         <path d="M 20,50 Q 5,30 8,50 Q 5,70 20,50 Z" fill="#FF6B00" stroke="#000" stroke-width="2.5"/>
         <path d="M 14,38 Q 8,50 14,62" fill="none" stroke="#FFF" stroke-width="3"/>
         <path d="M 10,40 Q 5,50 10,60" fill="none" stroke="#000" stroke-width="2"/>
 
-        <!-- Top & Bottom Fins -->
         <path d="M 45,25 Q 55,10 65,22 Z" fill="#FF6B00" stroke="#000" stroke-width="2.5"/>
         <path d="M 45,75 Q 55,90 65,78 Z" fill="#FF6B00" stroke="#000" stroke-width="2.5"/>
 
-        <!-- Main Body -->
         <ellipse cx="55" cy="50" rx="35" ry="25" fill="#FF6B00" stroke="#000" stroke-width="2.5"/>
 
-        <!-- White Stripes (ลายแถบขาวตึ๊ดตามสไตล์ปลาการ์ตูน) -->
-        <!-- Stripe 1 (Tail) -->
         <path d="M 32,32 Q 35,50 32,68 Q 27,65 27,35 Z" fill="#FFFFFF" stroke="#000" stroke-width="2"/>
-        <!-- Stripe 2 (Middle) -->
         <path d="M 52,25 Q 57,50 52,75 Q 45,72 45,28 Z" fill="#FFFFFF" stroke="#000" stroke-width="2"/>
-        <!-- Stripe 3 (Head) -->
         <path d="M 72,28 Q 77,50 72,71 Q 67,67 67,33 Z" fill="#FFFFFF" stroke="#000" stroke-width="2"/>
 
-        <!-- Pectoral Fin -->
         <path d="M 48,52 Q 40,60 48,65 Z" fill="#FF851B" stroke="#000" stroke-width="2"/>
         <path d="M 46,55 Q 42,60 46,63" fill="none" stroke="#FFF" stroke-width="2"/>
 
-        <!-- Eye -->
         <circle cx="78" cy="44" r="6" fill="#FFFFFF" stroke="#000" stroke-width="1.5"/>
         <circle cx="79" cy="44" r="3" fill="#000000"/>
         <circle cx="80.5" cy="42.5" r="1" fill="#FFFFFF"/>
 
-        <!-- Cute Smile Mouth -->
         <path d="M 85,52 Q 82,56 87,57" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
     </svg>
 </div>
@@ -505,26 +496,70 @@
     }
 
     // -------------------------------------------------------------
-    // 2. ระบบแจ้งเตือนเวลาให้อาหารปลา ( morning alert < 12:00 น.)
+    // 2. ระบบแจ้งเตือนให้อาหาร (8:00 - 11:00 น.) & Double Click ซ่อนปลา
     // -------------------------------------------------------------
+    const fishContainer = document.getElementById('clownfishContainer');
+    const fishBubble = document.getElementById('fishBubble');
+
     function updateFeedingAlert() {
         const now = new Date();
         const hours = now.getHours();
-        const fishBubble = document.getElementById('fishBubble');
+        const todayStr = now.toDateString();
+        const lastFedDate = localStorage.getItem('fishFedDate');
 
-        // แสดงข้อความหิวตอนเช้า (ก่อนเที่ยง 00:00 - 11:59 น.) พอ 12:00 น. ข้อความจะซ่อนไป
-        if (hours < 12) {
+        // หากเคยกดให้อาหาร (Double Click) ในวันนี้ไปแล้ว ให้ซ่อนทั้งหมด
+        if (lastFedDate === todayStr) {
+            fishContainer.style.display = 'none';
+            return;
+        }
+
+        // เช็คช่วงเวลา 08:00 - 11:00 น.
+        if (hours >= 8 && hours < 11) {
+            fishContainer.style.display = 'flex';
             fishBubble.style.display = 'block';
         } else {
+            fishContainer.style.display = 'none';
             fishBubble.style.display = 'none';
         }
     }
 
+    // ฟังชัน Double Click หรือ Double Tap ที่ตัวปลาเพื่อซ่อน
+    let lastTapTime = 0;
+    function handleFishDoubleTap(e) {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTapTime;
+
+        if (tapLength < 300 && tapLength > 0) { // หากมีการกดติดกัน 2 ครั้งภายใน 300ms
+            const todayStr = new Date().toDateString();
+            localStorage.setItem('fishFedDate', todayStr); // บันทึกว่าวันนี้ให้อาหารแล้ว
+            
+            // เอฟเฟกต์ค่อยๆ จางหาย
+            fishContainer.style.opacity = '0';
+            setTimeout(() => {
+                fishContainer.style.display = 'none';
+                fishContainer.style.opacity = '1';
+            }, 500);
+
+            e.preventDefault();
+        }
+        lastTapTime = currentTime;
+    }
+
+    fishContainer.addEventListener('dblclick', function(e) {
+        const todayStr = new Date().toDateString();
+        localStorage.setItem('fishFedDate', todayStr);
+        fishContainer.style.opacity = '0';
+        setTimeout(() => {
+            fishContainer.style.display = 'none';
+            fishContainer.style.opacity = '1';
+        }, 500);
+    });
+
     // -------------------------------------------------------------
     // 3. ระบบลากน้องปลาการ์ตูน (Draggable Clownfish Engine)
     // -------------------------------------------------------------
-    const fishContainer = document.getElementById('clownfishContainer');
     let isDragging = false;
+    let hasMoved = false;
     let currentX, currentY, initialX, initialY;
     let xOffset = 0, yOffset = 0;
 
@@ -537,6 +572,7 @@
     document.addEventListener('touchend', dragEnd);
 
     function dragStart(e) {
+        hasMoved = false;
         if (e.type === "touchstart") {
             initialX = e.touches[0].clientX - xOffset;
             initialY = e.touches[0].clientY - yOffset;
@@ -549,6 +585,7 @@
 
     function drag(e) {
         if (isDragging) {
+            hasMoved = true;
             e.preventDefault();
             if (e.type === "touchmove") {
                 currentX = e.touches[0].clientX - initialX;
@@ -567,10 +604,15 @@
         el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
     }
 
-    function dragEnd() {
+    function dragEnd(e) {
         initialX = currentX;
         initialY = currentY;
         isDragging = false;
+
+        // ถ้าไม่ได้ลาก (เป็นการแตะสั้นๆ) ให้ส่งไปเช็ค Double Tap สำหรับมือถือ
+        if (!hasMoved) {
+            handleFishDoubleTap(e);
+        }
     }
 
     // รันการตรวจสอบเวลา
