@@ -111,7 +111,7 @@
             </div>
 
             <div class="salt-box">
-                <div class="dosing-item"><span>น้ำหนักเกลือที่ต้องใช้:</span><strong id="saltGrams" style="color:var(--accent-gold);">0 กรัม</strong></div>
+                <div class="dosing-item"><span>ปริมาตรเกลือที่ต้องใช้:</span><strong id="saltML" style="color:var(--accent-gold);">0 ml</strong></div>
                 <div class="dosing-item"><span style="font-size:0.75rem; color:var(--text-muted);">ช่วงค่าน้ำเกลือใหม่:</span><span id="saltSpecText" style="font-size:0.75rem; color:var(--text-muted);">-</span></div>
             </div>
 
@@ -246,7 +246,7 @@
     // นำคีย์จาก Firebase มาวางแทนที่ตรงนี้
     // -------------------------------------------------------------
     const firebaseConfig = {
-        apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
+       apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
   authDomain: "dewreef-838de.firebaseapp.com",
   databaseURL: "https://dewreef-838de-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "dewreef-838de",
@@ -288,8 +288,11 @@
         const changeVol = parseFloat(document.getElementById('changeVolume').value) || 0;
         const targetPPT = parseInt(document.getElementById('targetSalinity').value) || 33;
         
-        const saltGrams = changeVol * targetPPT * 1.1515;
-        document.getElementById('saltGrams').innerText = saltGrams.toFixed(1) + ' กรัม';
+        // คำนวณปริมาตรเกลือเป็นมิลลิลิตร (ml)
+        // น้ำหนักเกลือ (g) = changeVol * targetPPT * 1.1515
+        // ปริมาตรเกลือ (ml) = น้ำหนัก (g) / 1.15 (ความหนาแน่นเกลือ) ≈ changeVol * targetPPT * 1.0
+        const saltML = changeVol * targetPPT * 1.0;
+        document.getElementById('saltML').innerText = saltML.toFixed(0) + ' ml';
 
         const spec = afSaltSpecs[targetPPT];
         if (spec) {
@@ -326,13 +329,13 @@
         const diffMg = Math.max(0, tarMg - curMg);
 
         if (volume > 0) {
-            // KH: 1 ml / 100L เพิ่ม 0.5 dKH => (diffKH / 0.5) * (volume / 100) = diffKH * volume / 50
+            // KH: 1 ml / 100L เพิ่ม 0.5 dKH
             doseKH = (diffKH * volume) / 50;
 
-            // Ca: 10 ml / 100L (1ml/100L=0.45ppm) เพิ่ม 4.5 ppm => (diffCa / 4.5) * 10 * (volume / 100) = (diffCa * volume) / 45
+            // Ca: 10 ml / 100L เพิ่ม 4.5 ppm
             doseCa = (diffCa * volume) / 45;
 
-            // Mg: 10 ml / 100L (1ml/100L=0.2ppm) เพิ่ม 2.0 ppm => (diffMg / 2.0) * 10 * (volume / 100) = (diffMg * volume) / 20
+            // Mg: 10 ml / 100L เพิ่ม 2.0 ppm
             doseMg = (diffMg * volume) / 20;
         }
 
