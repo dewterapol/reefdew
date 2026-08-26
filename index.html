@@ -26,6 +26,7 @@
             --accent-green: #34d399;
             --accent-purple: #c084fc;
             --accent-gold: #fbbf24;
+            --accent-red: #f87171;
         }
 
         body {
@@ -63,8 +64,11 @@
         .dosing-result { background: rgba(56, 189, 248, 0.08); border-left: 4px solid var(--primary); padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; }
         .salt-box { background: rgba(251, 191, 36, 0.08); border-left: 4px solid var(--accent-gold); padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; }
         .recommend-box { background: rgba(52, 211, 153, 0.1); border-left: 4px solid var(--accent-green); padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; }
-        .dosing-item { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; }
+        .alert-box { background: rgba(248, 113, 113, 0.15); border-left: 4px solid var(--accent-red); padding: 10px; margin-top: 10px; border-radius: 0 8px 8px 0; font-size: 0.8rem; color: #fca5a5; display: none; }
         
+        .dosing-item { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; }
+        .dosing-sub { font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: -4px; margin-bottom: 6px; }
+
         .spec-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.75rem; text-align: center; }
         .spec-table th { background: rgba(251, 191, 36, 0.2); color: var(--accent-gold); padding: 6px; }
         .spec-table td { padding: 6px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
@@ -74,8 +78,16 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.8rem; white-space: nowrap; }
         th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
         th { background-color: rgba(56, 189, 248, 0.1); color: var(--primary); }
+        
         .val-up { color: #34d399; font-size: 0.75rem; }
         .val-down { color: #f87171; font-size: 0.75rem; }
+        .val-warning { color: #fbbf24; font-size: 0.75rem; font-weight: bold; }
+        
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        .badge-success { background: rgba(52, 211, 153, 0.2); color: #34d399; }
+        .badge-warning { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .badge-danger { background: rgba(248, 113, 113, 0.2); color: #f87171; }
+        
         .btn-delete { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; width: auto; }
     </style>
 </head>
@@ -177,17 +189,25 @@
             </form>
         </div>
 
-        <!-- 3. แนะนำโดส & อ้างอิง AF -->
+        <!-- 3. แนะนำโดส & ความปลอดภัย -->
         <div class="card">
-            <h2>3. แนะนำปริมาณโดส & อ้างอิงเกลือ</h2>
-            <label style="font-weight:600; color:var(--primary);">โดสเพื่อปรับเข้าสู่เป้าหมาย:</label>
+            <h2>3. แนะนำโดส & รักษาระดับค่าน้ำ</h2>
+            
+            <div id="safetyAlert" class="alert-box"></div>
+
+            <label style="font-weight:600; color:var(--primary); margin-top:5px; display:block;">การโดสเพื่อปรับเข้าสู่เป้าหมาย (Safety Dosing):</label>
             <div class="dosing-result">
                 <div class="dosing-item"><span>KH Buffer:</span><strong id="doseKH">0 ml</strong></div>
+                <div class="dosing-sub" id="doseKHPlan"></div>
+
                 <div class="dosing-item"><span>Calcium:</span><strong id="doseCa">0 ml</strong></div>
+                <div class="dosing-sub" id="doseCaPlan"></div>
+
                 <div class="dosing-item"><span>Magnesium:</span><strong id="doseMg">0 ml</strong></div>
+                <div class="dosing-sub" id="doseMgPlan"></div>
             </div>
 
-            <label style="font-weight:600; color:var(--accent-green); margin-top:10px; display:block;">แนะนำโดสประคองรายวัน:</label>
+            <label style="font-weight:600; color:var(--accent-green); margin-top:10px; display:block;">อัตราสิ้นเปลืองและโดสประคองรายวัน:</label>
             <div class="recommend-box">
                 <div class="dosing-item"><span>KH (ประจำวัน):</span><strong id="recKH" style="color:var(--accent-green)">- ml/วัน</strong></div>
                 <div class="dosing-item"><span>Ca (ประจำวัน):</span><strong id="recCa" style="color:var(--accent-green)">- ml/วัน</strong></div>
@@ -221,7 +241,7 @@
     </div>
 
     <div class="card">
-        <h2>ประวัติการบันทึก</h2>
+        <h2>ประวัติการบันทึก & สถานะความเสถียร</h2>
         <div class="table-responsive">
             <table>
                 <thead>
@@ -231,6 +251,7 @@
                         <th>Ca</th>
                         <th>Mg</th>
                         <th>NO3</th>
+                        <th>สถานะความเสถียร</th>
                         <th>โดสจริง</th>
                         <th>ลบ</th>
                     </tr>
@@ -256,7 +277,14 @@
     };
     // -------------------------------------------------------------
 
-    // ข้อมูลมาตรฐาน Aquaforest Hybrid Pro Salt
+    // ลิมิตการปรับเปลี่ยนค่าน้ำที่ปลอดภัยต่อวัน
+    const LIMITS = {
+        MAX_KH_PER_DAY: 0.5,   // ไม่ควรขึ้น/ลงเกิน 0.5 dKH ต่อวัน
+        MAX_CA_PER_DAY: 20,    // ไม่ควรขึ้น/ลงเกิน 20 ppm ต่อวัน
+        MAX_MG_PER_DAY: 50,    // ไม่ควรขึ้น/ลงเกิน 50 ppm ต่อวัน
+        MAX_NO3_PER_DAY: 5.0   // ไม่ควรแกว่งเกิน 5 ppm ต่อวัน
+    };
+
     const afSaltSpecs = {
         30: { khMin: 6.4, khMax: 7.3, caMin: 359, caMax: 375, mgMin: 1120, mgMax: 1190, kMin: 310, kMax: 330, avgKH: 6.8, avgCa: 367, avgMg: 1155 },
         33: { khMin: 7.3, khMax: 7.6, caMin: 380, caMax: 410, mgMin: 1230, mgMax: 1300, kMin: 340, kMax: 360, avgKH: 7.5, avgCa: 395, avgMg: 1265 },
@@ -288,9 +316,6 @@
         const changeVol = parseFloat(document.getElementById('changeVolume').value) || 0;
         const targetPPT = parseInt(document.getElementById('targetSalinity').value) || 33;
         
-        // คำนวณปริมาตรเกลือเป็นมิลลิลิตร (ml)
-        // น้ำหนักเกลือ (g) = changeVol * targetPPT * 1.1515
-        // ปริมาตรเกลือ (ml) = น้ำหนัก (g) / 1.15 (ความหนาแน่นเกลือ) ≈ changeVol * targetPPT * 1.0
         const saltML = changeVol * targetPPT * 1.0;
         document.getElementById('saltML').innerText = saltML.toFixed(0) + ' ml';
 
@@ -322,26 +347,74 @@
         const tarCa = parseFloat(document.getElementById('targetCa').value) || 0;
         const tarMg = parseFloat(document.getElementById('targetMg').value) || 0;
 
-        let doseKH = 0, doseCa = 0, doseMg = 0;
+        let diffKH = tarKH - curKH;
+        let diffCa = tarCa - curCa;
+        let diffMg = tarMg - curMg;
 
-        const diffKH = Math.max(0, tarKH - curKH);
-        const diffCa = Math.max(0, tarCa - curCa);
-        const diffMg = Math.max(0, tarMg - curMg);
+        let alerts = [];
 
-        if (volume > 0) {
-            // KH: 1 ml / 100L เพิ่ม 0.5 dKH
-            doseKH = (diffKH * volume) / 50;
-
-            // Ca: 10 ml / 100L เพิ่ม 4.5 ppm
-            doseCa = (diffCa * volume) / 45;
-
-            // Mg: 10 ml / 100L เพิ่ม 2.0 ppm
-            doseMg = (diffMg * volume) / 20;
+        // คำนวณโดส KH
+        if (diffKH > 0 && volume > 0) {
+            let totalDoseKH = (diffKH * volume) / 50;
+            document.getElementById('doseKH').innerText = totalDoseKH.toFixed(2) + ' ml';
+            
+            if (diffKH > LIMITS.MAX_KH_PER_DAY) {
+                let days = Math.ceil(diffKH / LIMITS.MAX_KH_PER_DAY);
+                let dailyDose = totalDoseKH / days;
+                document.getElementById('doseKHPlan').innerText = `⚠️ แนะนำแบ่งโดสวันละ ${dailyDose.toFixed(2)} ml (${days} วัน)`;
+                alerts.push(`KH ต่ำกว่าเป้า ${diffKH.toFixed(1)} dKH (ควรค่อยๆ ปรับไม่เกิน ${LIMITS.MAX_KH_PER_DAY} dKH/วัน)`);
+            } else {
+                document.getElementById('doseKHPlan').innerText = `ปลอดภัยสำหรับโดสใน 1 วัน`;
+            }
+        } else {
+            document.getElementById('doseKH').innerText = '0 ml';
+            document.getElementById('doseKHPlan').innerText = diffKH < 0 ? 'ค่าน้ำสูงกว่าเป้าหมาย' : 'ตรงตามเป้าหมาย';
         }
 
-        document.getElementById('doseKH').innerText = doseKH.toFixed(2) + ' ml';
-        document.getElementById('doseCa').innerText = doseCa.toFixed(2) + ' ml';
-        document.getElementById('doseMg').innerText = doseMg.toFixed(2) + ' ml';
+        // คำนวณโดส Ca
+        if (diffCa > 0 && volume > 0) {
+            let totalDoseCa = (diffCa * volume) / 45;
+            document.getElementById('doseCa').innerText = totalDoseCa.toFixed(2) + ' ml';
+            
+            if (diffCa > LIMITS.MAX_CA_PER_DAY) {
+                let days = Math.ceil(diffCa / LIMITS.MAX_CA_PER_DAY);
+                let dailyDose = totalDoseCa / days;
+                document.getElementById('doseCaPlan').innerText = `⚠️ แนะนำแบ่งโดสวันละ ${dailyDose.toFixed(2)} ml (${days} วัน)`;
+                alerts.push(`Ca ต่ำกว่าเป้า ${diffCa} ppm (ควรค่อยๆ ปรับไม่เกิน ${LIMITS.MAX_CA_PER_DAY} ppm/วัน)`);
+            } else {
+                document.getElementById('doseCaPlan').innerText = `ปลอดภัยสำหรับโดสใน 1 วัน`;
+            }
+        } else {
+            document.getElementById('doseCa').innerText = '0 ml';
+            document.getElementById('doseCaPlan').innerText = diffCa < 0 ? 'ค่าน้ำสูงกว่าเป้าหมาย' : 'ตรงตามเป้าหมาย';
+        }
+
+        // คำนวณโดส Mg
+        if (diffMg > 0 && volume > 0) {
+            let totalDoseMg = (diffMg * volume) / 20;
+            document.getElementById('doseMg').innerText = totalDoseMg.toFixed(2) + ' ml';
+            
+            if (diffMg > LIMITS.MAX_MG_PER_DAY) {
+                let days = Math.ceil(diffMg / LIMITS.MAX_MG_PER_DAY);
+                let dailyDose = totalDoseMg / days;
+                document.getElementById('doseMgPlan').innerText = `⚠️ แนะนำแบ่งโดสวันละ ${dailyDose.toFixed(2)} ml (${days} วัน)`;
+                alerts.push(`Mg ต่ำกว่าเป้า ${diffMg} ppm (ควรค่อยๆ ปรับไม่เกิน ${LIMITS.MAX_MG_PER_DAY} ppm/วัน)`);
+            } else {
+                document.getElementById('doseMgPlan').innerText = `ปลอดภัยสำหรับโดสใน 1 วัน`;
+            }
+        } else {
+            document.getElementById('doseMg').innerText = '0 ml';
+            document.getElementById('doseMgPlan').innerText = diffMg < 0 ? 'ค่าน้ำสูงกว่าเป้าหมาย' : 'ตรงตามเป้าหมาย';
+        }
+
+        // แสดง Alert แจ้งเตือนความปลอดภัย
+        const alertBox = document.getElementById('safetyAlert');
+        if (alerts.length > 0) {
+            alertBox.style.display = 'block';
+            alertBox.innerHTML = '<strong>⚠️ คำแนะนำความปลอดภัย:</strong><br>' + alerts.join('<br>');
+        } else {
+            alertBox.style.display = 'none';
+        }
 
         calculateDailyConsumption();
     }
@@ -363,15 +436,19 @@
             const prev = reefLogs[i - 1];
             const curr = reefLogs[i];
 
-            totalDropKH += Math.max(0, prev.kh - curr.kh);
-            totalDropCa += Math.max(0, prev.ca - curr.ca);
-            totalDropMg += Math.max(0, prev.mg - curr.mg);
-            count++;
+            // คำนวณวันต่างจริง
+            const daysDiff = (new Date(curr.date) - new Date(prev.date)) / (1000 * 60 * 60 * 24);
+            if (daysDiff > 0) {
+                totalDropKH += Math.max(0, (prev.kh - curr.kh) / daysDiff);
+                totalDropCa += Math.max(0, (prev.ca - curr.ca) / daysDiff);
+                totalDropMg += Math.max(0, (prev.mg - curr.mg) / daysDiff);
+                count++;
+            }
         }
 
-        const avgDropKH = totalDropKH / count;
-        const avgDropCa = totalDropCa / count;
-        const avgDropMg = totalDropMg / count;
+        const avgDropKH = count > 0 ? totalDropKH / count : 0;
+        const avgDropCa = count > 0 ? totalDropCa / count : 0;
+        const avgDropMg = count > 0 ? totalDropMg / count : 0;
 
         let reqKH = 0, reqCa = 0, reqMg = 0;
 
@@ -433,15 +510,29 @@
             const prevLog = reefLogs[originalIndex - 1];
 
             let diffKHText = '', diffCaText = '', diffMgText = '';
+            let statusBadge = '<span class="badge badge-success">🟢 ปกติ</span>';
 
             if (prevLog) {
-                const dKH = (log.kh - prevLog.kh).toFixed(1);
-                const dCa = (log.ca - prevLog.ca).toFixed(0);
-                const dMg = (log.mg - prevLog.mg).toFixed(0);
+                const daysDiff = Math.max(1, (new Date(log.date) - new Date(prevLog.date)) / (1000 * 60 * 60 * 24));
+                
+                const dKH = log.kh - prevLog.kh;
+                const dCa = log.ca - prevLog.ca;
+                const dMg = log.mg - prevLog.mg;
 
-                diffKHText = dKH >= 0 ? `<span class="val-up">(+${dKH})</span>` : `<span class="val-down">(${dKH})</span>`;
-                diffCaText = dCa >= 0 ? `<span class="val-up">(+${dCa})</span>` : `<span class="val-down">(${dCa})</span>`;
-                diffMgText = dMg >= 0 ? `<span class="val-up">(+${dMg})</span>` : `<span class="val-down">(${dMg})</span>`;
+                const dailyKH = Math.abs(dKH) / daysDiff;
+                const dailyCa = Math.abs(dCa) / daysDiff;
+                const dailyMg = Math.abs(dMg) / daysDiff;
+
+                diffKHText = dKH >= 0 ? `<span class="val-up">(+${dKH.toFixed(1)})</span>` : `<span class="val-down">(${dKH.toFixed(1)})</span>`;
+                diffCaText = dCa >= 0 ? `<span class="val-up">(+${dCa.toFixed(0)})</span>` : `<span class="val-down">(${dCa.toFixed(0)})</span>`;
+                diffMgText = dMg >= 0 ? `<span class="val-up">(+${dMg.toFixed(0)})</span>` : `<span class="val-down">(${dMg.toFixed(0)})</span>`;
+
+                if (dailyKH > LIMITS.MAX_KH_PER_DAY) {
+                    diffKHText += ' ⚠️';
+                    statusBadge = '<span class="badge badge-danger">🔴 KH แกว่งแรง</span>';
+                } else if (dailyCa > LIMITS.MAX_CA_PER_DAY || dailyMg > LIMITS.MAX_MG_PER_DAY) {
+                    statusBadge = '<span class="badge badge-warning">🟡 Ca/Mg แกว่ง</span>';
+                }
             }
 
             const tr = document.createElement('tr');
@@ -451,6 +542,7 @@
                 <td>${log.ca} ${diffCaText}</td>
                 <td>${log.mg} ${diffMgText}</td>
                 <td>${log.no3}</td>
+                <td>${statusBadge}</td>
                 <td>${log.dosedKH || 0}/${log.dosedCa || 0}/${log.dosedMg || 0}</td>
                 <td><button class="btn-delete" onclick="deleteLog('${log.firebaseKey}')">ลบ</button></td>
             `;
