@@ -202,10 +202,6 @@
         .dosing-item strong { font-family: var(--font-number); }
         .dosing-sub { font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: -2px; margin-bottom: 8px; }
 
-        .spec-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.78rem; text-align: center; }
-        .spec-table th { background: rgba(255, 184, 0, 0.15); color: var(--accent-gold); padding: 8px 4px; border-radius: 4px; }
-        .spec-table td { padding: 8px 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-family: var(--font-number); }
-
         .chart-container { position: relative; height: 320px; margin-bottom: 20px; }
         .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         
@@ -467,25 +463,6 @@
                 <div class="dosing-item"><span>Ca (ประจำวัน):</span><strong id="recCa" style="color:var(--accent-green)">- ml/วัน</strong></div>
                 <div class="dosing-item"><span>Mg (ประจำวัน):</span><strong id="recMg" style="color:var(--accent-green)">- ml/วัน</strong></div>
             </div>
-
-            <!-- ตารางอ้างอิง AF Hybrid Pro -->
-            <label style="font-weight:600; color:var(--accent-gold); margin-top:12px; display:block;">ตารางสเปก AF Hybrid Pro Salt:</label>
-            <table class="spec-table">
-                <thead>
-                    <tr>
-                        <th>Salinity</th>
-                        <th>Alk (dKH)</th>
-                        <th>Ca (mg/l)</th>
-                        <th>Mg (mg/l)</th>
-                        <th>K (mg/l)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td>30 ppt</td><td>6.4 - 7.3</td><td>359 - 375</td><td>1120 - 1190</td><td>310 - 330</td></tr>
-                    <tr><td>33 ppt</td><td>7.3 - 7.6</td><td>380 - 410</td><td>1230 - 1300</td><td>340 - 360</td></tr>
-                    <tr><td>35 ppt</td><td>7.7 - 8.4</td><td>415 - 440</td><td>1310 - 1380</td><td>380 - 400</td></tr>
-                </tbody>
-            </table>
         </div>
     </div>
 
@@ -539,6 +516,7 @@
         MAX_NO3_PER_DAY: 5.0
     };
 
+    // ฝังค่าน้ำสเปก AF Hybrid Pro Salt ในระบบคำนวณแบบซ่อนจากหน้าจอ
     const afSaltSpecs = {
         30: { ratio: 35.5, khMin: 6.4, khMax: 7.3, caMin: 359, caMax: 375, mgMin: 1120, mgMax: 1190, avgKH: 6.8, avgCa: 367, avgMg: 1155 },
         33: { ratio: 39.0, khMin: 7.3, khMax: 7.6, caMin: 380, caMax: 410, mgMin: 1230, mgMax: 1300, avgKH: 7.5, avgCa: 395, avgMg: 1265 },
