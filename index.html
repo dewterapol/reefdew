@@ -7,8 +7,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ตู้ปลา 40L">
     
-    <title>ระบบบันทึกค่าน้ำตู้ปลา 40L (AF Hybrid Pro Salt)</title>
+    <title>Reef Water Quality Dashboard 40L (AF Hybrid Pro)</title>
     
+    <!-- Google Fonts: Kanit, Prompt, JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;800&family=Kanit:wght@500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+
     <!-- โหลด Chart.js และ Firebase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -16,125 +21,208 @@
 
     <style>
         :root {
-            --primary: #38bdf8;
-            --primary-hover: #0284c7;
-            --card-bg: rgba(15, 30, 55, 0.75);
-            --card-border: rgba(56, 189, 248, 0.2);
-            --text: #f1f5f9;
+            /* Color Palette: Deep Ocean & Cyber Neon */
+            --bg-main: #0b1325;
+            --primary: #00f2fe;
+            --primary-hover: #38bdf8;
+            --card-bg: rgba(22, 34, 56, 0.75);
+            --card-border: rgba(0, 242, 254, 0.18);
+            --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --input-bg: rgba(2, 13, 29, 0.8);
-            --accent-green: #34d399;
-            --accent-purple: #c084fc;
-            --accent-gold: #fbbf24;
-            --accent-red: #f87171;
+            --input-bg: rgba(7, 13, 25, 0.85);
             
-            --ambient-color: rgba(56, 189, 248, 0.3);
-            --ambient-glow: 0 0 25px rgba(56, 189, 248, 0.4);
+            /* Status Colors */
+            --accent-green: #38ef7d;
+            --accent-gold: #ffb800;
+            --accent-red: #ff4b4b;
+            --accent-purple: #c084fc;
+            
+            --ambient-color: rgba(0, 242, 254, 0.25);
+            --ambient-glow: 0 0 30px rgba(0, 242, 254, 0.3);
+            
+            /* Typography */
+            --font-title: 'Kanit', sans-serif;
+            --font-body: 'Prompt', sans-serif;
+            --font-number: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            color: var(--text);
+            font-family: var(--font-body);
+            color: var(--text-main);
             margin: 0;
-            padding: 15px;
-            padding-top: calc(env(safe-area-inset-top) + 15px);
-            padding-bottom: calc(env(safe-area-inset-bottom) + 25px);
+            padding: 16px;
+            padding-top: calc(env(safe-area-inset-top) + 16px);
+            padding-bottom: calc(env(safe-area-inset-bottom) + 30px);
             min-height: 100vh;
-            background: linear-gradient(to bottom, rgba(3, 10, 25, 0.85), rgba(2, 6, 18, 0.93)),
-                        url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
+            background: radial-gradient(circle at top center, #132240 0%, #0b1325 100%);
+            background-attachment: fixed;
             -webkit-tap-highlight-color: transparent;
-            transition: background 1s ease;
         }
 
         .container { max-width: 1100px; margin: 0 auto; }
         
+        /* Header Box Design */
         .header-box {
             position: relative;
             text-align: center;
-            padding: 20px;
-            border-radius: 20px;
+            padding: 24px 20px;
+            border-radius: 24px;
             background: var(--card-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--ambient-color);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
             box-shadow: var(--ambient-glow);
-            margin-bottom: 15px;
-            transition: all 1s ease;
+            margin-bottom: 20px;
             overflow: hidden;
         }
 
-        .header-box::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, var(--ambient-color) 0%, transparent 60%);
-            opacity: 0.5;
-            animation: pulseGlow 6s infinite alternate ease-in-out;
-            pointer-events: none;
+        h1 { 
+            font-family: var(--font-title); 
+            margin: 0 0 6px 0; 
+            color: var(--primary); 
+            font-size: 1.65rem; 
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 16px rgba(0, 242, 254, 0.4); 
         }
-
-        @keyframes pulseGlow {
-            0% { transform: scale(0.95); opacity: 0.3; }
-            100% { transform: scale(1.05); opacity: 0.7; }
-        }
-
-        h1 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.5rem; text-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
         
         .light-status-bar {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 4px 12px;
-            border-radius: 20px;
+            padding: 6px 14px;
+            border-radius: 30px;
             font-size: 0.8rem;
-            font-weight: 600;
-            background: rgba(0, 0, 0, 0.4);
+            font-weight: 500;
+            background: rgba(0, 0, 0, 0.45);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 5px;
+            margin-bottom: 6px;
         }
 
         .sync-status { text-align: center; font-size: 0.8rem; color: var(--accent-green); }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .card { background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 16px; border-radius: 16px; border: 1px solid var(--card-border); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
-        .card h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 12px; color: var(--primary); border-bottom: 1px solid var(--card-border); padding-bottom: 8px; }
-        .form-group { margin-bottom: 12px; }
-        .form-row { display: flex; gap: 8px; }
-        label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-muted); }
-        input, select { width: 100%; padding: 10px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 10px; font-size: 16px; color: #fff; box-sizing: border-box; }
-        button { width: 100%; background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-secondary { background: linear-gradient(135deg, #059669, #10b981); margin-top: 8px; padding: 10px; font-size: 0.85rem; }
-        
-        .dosing-result { background: rgba(56, 189, 248, 0.08); border-left: 4px solid var(--primary); padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; }
-        .salt-box { background: rgba(251, 191, 36, 0.08); border-left: 4px solid var(--accent-gold); padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; }
-        .recommend-box { background: rgba(52, 211, 153, 0.1); border-left: 4px solid var(--accent-green); padding: 12px; margin-top: 10px; border-radius: 0 8px 8px 0; }
-        .alert-box { background: rgba(248, 113, 113, 0.15); border-left: 4px solid var(--accent-red); padding: 10px; margin-top: 10px; border-radius: 0 8px 8px 0; font-size: 0.8rem; color: #fca5a5; display: none; }
-        
-        .dosing-item { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; }
-        .dosing-sub { font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: -4px; margin-bottom: 6px; }
+        /* Dashboard Overview Grid (Quick Metrics) */
+        .metrics-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
 
-        .spec-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.75rem; text-align: center; }
-        .spec-table th { background: rgba(251, 191, 36, 0.2); color: var(--accent-gold); padding: 6px; }
-        .spec-table td { padding: 6px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 14px 12px;
+            text-align: center;
+            backdrop-filter: blur(12px);
+        }
 
-        .chart-container { position: relative; height: 300px; margin-bottom: 20px; }
+        .metric-card .title { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+        .metric-card .value { font-family: var(--font-number); font-size: 1.6rem; font-weight: 800; color: var(--primary); margin: 4px 0; }
+        .metric-card .unit { font-size: 0.7rem; color: var(--text-muted); }
+
+        /* General Grid & Cards */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; margin-bottom: 20px; }
+        .card { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(16px); 
+            -webkit-backdrop-filter: blur(16px); 
+            padding: 20px; 
+            border-radius: 20px; 
+            border: 1px solid var(--card-border); 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); 
+        }
+        
+        .card h2 { 
+            font-family: var(--font-title);
+            font-size: 1.15rem; 
+            margin-top: 0; 
+            margin-bottom: 16px; 
+            color: var(--primary); 
+            border-bottom: 1px solid var(--card-border); 
+            padding-bottom: 10px; 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group { margin-bottom: 14px; }
+        .form-row { display: flex; gap: 10px; }
+        label { display: block; font-size: 0.85rem; margin-bottom: 6px; color: var(--text-muted); font-weight: 400; }
+        
+        input, select { 
+            width: 100%; 
+            padding: 12px 14px; 
+            background: var(--input-bg); 
+            border: 1px solid var(--card-border); 
+            border-radius: 12px; 
+            font-family: var(--font-body);
+            font-size: 15px; 
+            color: #fff; 
+            box-sizing: border-box; 
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+        }
+
+        button { 
+            width: 100%; 
+            background: linear-gradient(135deg, #00f2fe 0%, #0088ff 100%); 
+            color: #0b1325; 
+            border: none; 
+            padding: 14px; 
+            border-radius: 12px; 
+            font-family: var(--font-title);
+            font-size: 1rem; 
+            font-weight: 700; 
+            cursor: pointer; 
+            margin-top: 10px; 
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:active { transform: scale(0.98); }
+        .btn-secondary { background: linear-gradient(135deg, #10b981, #059669); color: white; margin-top: 10px; padding: 10px; font-size: 0.85rem; box-shadow: none; }
+        
+        /* Information Alert & Calculation Boxes */
+        .dosing-result { background: rgba(0, 242, 254, 0.06); border-left: 4px solid var(--primary); padding: 14px; margin-top: 12px; border-radius: 0 12px 12px 0; }
+        .salt-box { background: rgba(255, 184, 0, 0.08); border-left: 4px solid var(--accent-gold); padding: 14px; margin-top: 12px; border-radius: 0 12px 12px 0; }
+        .recommend-box { background: rgba(56, 239, 125, 0.08); border-left: 4px solid var(--accent-green); padding: 14px; margin-top: 12px; border-radius: 0 12px 12px 0; }
+        .alert-box { background: rgba(255, 75, 75, 0.15); border-left: 4px solid var(--accent-red); padding: 12px; margin-top: 12px; border-radius: 0 12px 12px 0; font-size: 0.82rem; color: #fca5a5; display: none; }
+        
+        .dosing-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.9rem; }
+        .dosing-item strong { font-family: var(--font-number); }
+        .dosing-sub { font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: -2px; margin-bottom: 8px; }
+
+        .spec-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.78rem; text-align: center; }
+        .spec-table th { background: rgba(255, 184, 0, 0.15); color: var(--accent-gold); padding: 8px 4px; border-radius: 4px; }
+        .spec-table td { padding: 8px 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-family: var(--font-number); }
+
+        .chart-container { position: relative; height: 320px; margin-bottom: 20px; }
         .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.8rem; white-space: nowrap; }
-        th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-        th { background-color: rgba(56, 189, 248, 0.1); color: var(--primary); }
         
-        .val-up { color: #34d399; font-size: 0.75rem; }
-        .val-down { color: #f87171; font-size: 0.75rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; white-space: nowrap; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+        th { background-color: rgba(0, 242, 254, 0.08); color: var(--primary); font-weight: 600; }
+        td { font-family: var(--font-number); }
         
-        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
-        .badge-success { background: rgba(52, 211, 153, 0.2); color: #34d399; }
-        .badge-warning { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
-        .badge-danger { background: rgba(248, 113, 113, 0.2); color: #f87171; }
+        .val-up { color: var(--accent-green); font-size: 0.75rem; }
+        .val-down { color: var(--accent-red); font-size: 0.75rem; }
         
-        .btn-delete { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; width: auto; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; font-family: var(--font-body); }
+        .badge-success { background: rgba(56, 239, 125, 0.15); color: var(--accent-green); border: 1px solid rgba(56, 239, 125, 0.3); }
+        .badge-warning { background: rgba(255, 184, 0, 0.15); color: var(--accent-gold); border: 1px solid rgba(255, 184, 0, 0.3); }
+        .badge-danger { background: rgba(255, 75, 75, 0.15); color: var(--accent-red); border: 1px solid rgba(255, 75, 75, 0.3); }
+        
+        .btn-delete { background: rgba(255, 75, 75, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red); padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; width: auto; font-family: var(--font-body); }
 
         /* Draggable Clownfish Widget */
         #clownfishContainer {
@@ -148,23 +236,21 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: opacity 0.5s ease, transform 0.2s ease;
+            transition: opacity 0.5s ease;
         }
-
-        #clownfishContainer:active { cursor: grabbing; }
 
         .speech-bubble {
             position: relative;
             background: #ffffff;
-            color: #0f172a;
+            color: #0b1325;
             padding: 8px 14px;
             border-radius: 16px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             margin-bottom: 8px;
             white-space: nowrap;
-            animation: bounceBubble 2s infinite ease-in-out;
+            animation: bounceBubble 2.5s infinite ease-in-out;
             border: 2px solid #ff7700;
         }
 
@@ -177,19 +263,14 @@
             border-width: 8px 8px 0;
             border-style: solid;
             border-color: #ffffff transparent;
-            display: block;
-            width: 0;
         }
 
         .clownfish-avatar {
-            width: 65px;
-            height: 65px;
-            filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4));
+            width: 60px;
+            height: 60px;
+            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
             animation: swimFloat 3s infinite ease-in-out;
-            transition: transform 0.2s ease;
         }
-
-        .clownfish-avatar:hover { transform: scale(1.1); }
 
         @keyframes swimFloat {
             0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -229,21 +310,45 @@
 
 <div class="container">
     <div class="header-box" id="headerBox">
-        <h1>ระบบบันทึกค่าน้ำตู้ 40L (AF Hybrid Pro)</h1>
+        <h1>REEF WATER LOG 40L</h1>
         <div class="light-status-bar" id="lightBadge">💡 กำลังโหลดสถานะแสงไฟ...</div>
         <div class="sync-status" id="syncStatus">☁️ เชื่อมต่อระบบ Cloud Sync เรียบร้อย</div>
+    </div>
+
+    <!-- Quick Metric Cards (สรุปค่าน้ำล่าสุดใน 3 วินาที) -->
+    <div class="metrics-overview">
+        <div class="metric-card">
+            <div class="title">KH (Alk)</div>
+            <div class="value" id="cardLatestKH">-</div>
+            <div class="unit">dKH</div>
+        </div>
+        <div class="metric-card">
+            <div class="title">Calcium</div>
+            <div class="value" id="cardLatestCa" style="color:var(--accent-green)">-</div>
+            <div class="unit">ppm</div>
+        </div>
+        <div class="metric-card">
+            <div class="title">Magnesium</div>
+            <div class="value" id="cardLatestMg" style="color:var(--accent-purple)">-</div>
+            <div class="unit">ppm</div>
+        </div>
+        <div class="metric-card">
+            <div class="title">Nitrate</div>
+            <div class="value" id="cardLatestNO3" style="color:var(--accent-red)">-</div>
+            <div class="unit">ppm</div>
+        </div>
     </div>
 
     <div class="grid">
         <!-- 1. ตั้งค่า -->
         <div class="card">
-            <h2>1. ตั้งค่าระบบและเป้าหมายค่าน้ำ</h2>
+            <h2>⚙️ ตั้งค่าระบบ & ผสมเกลือ</h2>
             <div class="form-group">
                 <label>ปริมาณน้ำในระบบ (ลิตร):</label>
                 <input type="number" id="waterVolume" value="40" onchange="calculateDosing(); calculateSalt();">
             </div>
             
-            <label style="font-weight:600; color:var(--accent-gold); margin-top:10px; display:block;">คำนวณผสมเกลือ AF Hybrid Pro Salt (390 ml / 10L):</label>
+            <label style="font-weight:600; color:var(--accent-gold); margin-top:12px; display:block;">ผสมเกลือ AF Hybrid Pro Salt (390 ml / 10L):</label>
             <div class="form-row">
                 <div class="form-group" style="flex:1;">
                     <label>น้ำเปลี่ยน (ลิตร):</label>
@@ -262,7 +367,7 @@
             <div class="salt-box">
                 <div class="dosing-item">
                     <span>ปริมาตรเกลือที่ต้องใช้:</span>
-                    <strong id="saltMl" style="color:var(--accent-gold); font-size: 1.1rem;">0 ml</strong>
+                    <strong id="saltMl" style="color:var(--accent-gold); font-size: 1.15rem;">0 ml</strong>
                 </div>
                 <div class="dosing-item">
                     <span style="font-size:0.75rem; color:var(--text-muted);">อัตราส่วนที่ใช้:</span>
@@ -274,7 +379,7 @@
                 </div>
             </div>
 
-            <label style="font-weight:600; color:var(--primary); margin-top:12px; display:block;">ตั้งค่าเป้าหมายค่าน้ำ (Target):</label>
+            <label style="font-weight:600; color:var(--primary); margin-top:14px; display:block;">เป้าหมายค่าน้ำ (Target Parameters):</label>
             <div class="form-row">
                 <div class="form-group" style="flex:1;">
                     <label>เป้า KH:</label>
@@ -289,15 +394,15 @@
                     <input type="number" id="targetMg" value="1265" onchange="calculateDosing()">
                 </div>
             </div>
-            <button type="button" class="btn-secondary" onclick="saveTargetSettings()">💾 บันทึกเป้าหมายค่าน้ำไว้ในระบบ</button>
+            <button type="button" class="btn-secondary" onclick="saveTargetSettings()">💾 บันทึกเป้าหมายค่าน้ำลง Cloud</button>
         </div>
 
         <!-- 2. บันทึก -->
         <div class="card">
-            <h2>2. บันทึกค่าน้ำวันนี้</h2>
+            <h2>📝 บันทึกค่าน้ำวันนี้</h2>
             <form id="logForm">
                 <div class="form-group">
-                    <label>วันที่:</label>
+                    <label>วันที่บันทึก:</label>
                     <input type="date" id="logDate" required>
                 </div>
                 <div class="form-row">
@@ -334,17 +439,17 @@
                     <label>NO3 (ppm):</label>
                     <input type="number" step="0.1" id="currentNO3" placeholder="2.0" required>
                 </div>
-                <button type="submit">บันทึกข้อมูลแบบ Cloud Sync</button>
+                <button type="submit">🚀 บันทึกค่าน้ำ (Cloud Sync)</button>
             </form>
         </div>
 
         <!-- 3. แนะนำโดส & ความปลอดภัย -->
         <div class="card">
-            <h2>3. แนะนำโดส & รักษาระดับค่าน้ำ</h2>
+            <h2>🧪 แนะนำโดส & อัตราสิ้นเปลือง</h2>
             
             <div id="safetyAlert" class="alert-box"></div>
 
-            <label style="font-weight:600; color:var(--primary); margin-top:5px; display:block;">การโดสเพื่อปรับเข้าสู่เป้าหมาย (Safety Dosing):</label>
+            <label style="font-weight:600; color:var(--primary); display:block;">โดสเพื่อปรับเข้าสู่เป้าหมาย (Safety Dosing):</label>
             <div class="dosing-result">
                 <div class="dosing-item"><span>KH Buffer:</span><strong id="doseKH">0 ml</strong></div>
                 <div class="dosing-sub" id="doseKHPlan"></div>
@@ -356,7 +461,7 @@
                 <div class="dosing-sub" id="doseMgPlan"></div>
             </div>
 
-            <label style="font-weight:600; color:var(--accent-green); margin-top:10px; display:block;">อัตราสิ้นเปลืองและโดสประคองรายวัน:</label>
+            <label style="font-weight:600; color:var(--accent-green); margin-top:12px; display:block;">อัตราสิ้นเปลืองและโดสประคองรายวัน:</label>
             <div class="recommend-box">
                 <div class="dosing-item"><span>KH (ประจำวัน):</span><strong id="recKH" style="color:var(--accent-green)">- ml/วัน</strong></div>
                 <div class="dosing-item"><span>Ca (ประจำวัน):</span><strong id="recCa" style="color:var(--accent-green)">- ml/วัน</strong></div>
@@ -364,7 +469,7 @@
             </div>
 
             <!-- ตารางอ้างอิง AF Hybrid Pro -->
-            <label style="font-weight:600; color:var(--accent-gold); margin-top:10px; display:block;">ตารางสเปก AF Hybrid Pro Salt:</label>
+            <label style="font-weight:600; color:var(--accent-gold); margin-top:12px; display:block;">ตารางสเปก AF Hybrid Pro Salt:</label>
             <table class="spec-table">
                 <thead>
                     <tr>
@@ -384,13 +489,15 @@
         </div>
     </div>
 
+    <!-- Chart Section -->
     <div class="card chart-container">
-        <h2>แนวโน้มค่าน้ำย้อนหลัง</h2>
+        <h2>📊 แนวโน้มค่าน้ำย้อนหลัง</h2>
         <canvas id="paramChart"></canvas>
     </div>
 
+    <!-- History Table Section -->
     <div class="card">
-        <h2>ประวัติการบันทึก & สถานะความเสถียร</h2>
+        <h2>📋 ประวัติการบันทึก & สถานะความเสถียร</h2>
         <div class="table-responsive">
             <table>
                 <thead>
@@ -401,7 +508,7 @@
                         <th>Mg</th>
                         <th>NO3</th>
                         <th>สถานะความเสถียร</th>
-                        <th>โดสจริง</th>
+                        <th>โดสจริง (KH/Ca/Mg)</th>
                         <th>ลบ</th>
                     </tr>
                 </thead>
@@ -416,7 +523,7 @@
     // Firebase Config
     // -------------------------------------------------------------
     const firebaseConfig = {
-        apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
+       apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
   authDomain: "dewreef-838de.firebaseapp.com",
   databaseURL: "https://dewreef-838de-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "dewreef-838de",
@@ -460,17 +567,17 @@
             lightBadge.innerHTML = '🌅 <b>เปิดไฟตู้ปลา:</b> โหมดพระอาทิตย์ขึ้น (Sunrise)';
             lightBadge.style.color = '#fb923c';
         } else if (currentTime >= 8.5 && currentTime < 20.5) {
-            root.style.setProperty('--ambient-color', 'rgba(56, 189, 248, 0.5)');
-            root.style.setProperty('--ambient-glow', '0 0 35px rgba(56, 189, 248, 0.7)');
+            root.style.setProperty('--ambient-color', 'rgba(0, 242, 254, 0.4)');
+            root.style.setProperty('--ambient-glow', '0 0 35px rgba(0, 242, 254, 0.6)');
             lightBadge.innerHTML = '☀️ <b>เปิดไฟตู้ปลา:</b> โหมดกลางวัน (Daylight 100%)';
-            lightBadge.style.color = '#38bdf8';
+            lightBadge.style.color = '#00f2fe';
         } else if (currentTime >= 20.5 && currentTime < 22.5) {
-            root.style.setProperty('--ambient-color', 'rgba(168, 85, 247, 0.6)');
-            root.style.setProperty('--ambient-glow', '0 0 35px rgba(168, 85, 247, 0.8)');
+            root.style.setProperty('--ambient-color', 'rgba(192, 132, 252, 0.5)');
+            root.style.setProperty('--ambient-glow', '0 0 35px rgba(192, 132, 252, 0.7)');
             lightBadge.innerHTML = '🌙 <b>เปิดไฟตู้ปลา:</b> โหมดแสงบลูเรืองแสง (Actinic Blue)';
             lightBadge.style.color = '#c084fc';
         } else {
-            root.style.setProperty('--ambient-color', 'rgba(30, 41, 59, 0.3)');
+            root.style.setProperty('--ambient-color', 'rgba(15, 23, 42, 0.3)');
             root.style.setProperty('--ambient-glow', '0 0 15px rgba(15, 23, 42, 0.5)');
             lightBadge.innerHTML = '🌑 <b>ปิดไฟตู้ปลา:</b> โหมดกลางคืน (Night Off)';
             lightBadge.style.color = '#94a3b8';
@@ -531,7 +638,7 @@
         }, 500);
     });
 
-    // Draggable Fish Widget Engine
+    // Draggable Fish Engine
     let isDragging = false, hasMoved = false;
     let currentX, currentY, initialX, initialY;
     let xOffset = 0, yOffset = 0;
@@ -631,9 +738,6 @@
         });
     }
 
-    // -------------------------------------------------------------
-    // คำนวณปริมาณเกลือ AF Hybrid Pro Salt (หน่วย: มิลลิลิตร / ml)
-    // -------------------------------------------------------------
     function calculateSalt() {
         const changeVol = parseFloat(document.getElementById('changeVolume').value) || 0;
         const targetPPT = parseInt(document.getElementById('targetSalinity').value) || 33;
@@ -641,7 +745,7 @@
         const spec = afSaltSpecs[targetPPT];
         if (spec) {
             const saltMl = changeVol * spec.ratio;
-            document.getElementById('saltMl').innerText = saltMl.toFixed(1) + ' ml (มิลลิลิตร)';
+            document.getElementById('saltMl').innerText = saltMl.toFixed(1) + ' ml';
             document.getElementById('saltRatioText').innerText = `${spec.ratio} ml / น้ำ 1 ลิตร`;
             document.getElementById('saltSpecText').innerText = `KH ${spec.khMin}-${spec.khMax} | Ca ${spec.caMin}-${spec.caMax} | Mg ${spec.mgMin}-${spec.mgMax}`;
         }
@@ -808,9 +912,20 @@
     }
 
     function updateApp() {
+        renderOverviewMetrics();
         renderTable();
         renderChart();
         calculateDailyConsumption();
+    }
+
+    function renderOverviewMetrics() {
+        if (reefLogs.length > 0) {
+            const latest = reefLogs[reefLogs.length - 1];
+            document.getElementById('cardLatestKH').innerText = latest.kh ?? '-';
+            document.getElementById('cardLatestCa').innerText = latest.ca ?? '-';
+            document.getElementById('cardLatestMg').innerText = latest.mg ?? '-';
+            document.getElementById('cardLatestNO3').innerText = latest.no3 ?? '-';
+        }
     }
 
     function renderTable() {
@@ -876,18 +991,18 @@
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'KH', data: reefLogs.map(l => l.kh), borderColor: '#38bdf8', backgroundColor: '#38bdf8', yAxisID: 'y', tension: 0.3 },
-                    { label: 'NO3', data: reefLogs.map(l => l.no3), borderColor: '#f87171', backgroundColor: '#f87171', yAxisID: 'y', tension: 0.3 },
-                    { label: 'Ca', data: reefLogs.map(l => l.ca), borderColor: '#34d399', backgroundColor: '#34d399', yAxisID: 'y1', tension: 0.3 },
-                    { label: 'Mg', data: reefLogs.map(l => l.mg), borderColor: '#c084fc', backgroundColor: '#c084fc', yAxisID: 'y1', tension: 0.3 }
+                    { label: 'KH', data: reefLogs.map(l => l.kh), borderColor: '#00f2fe', backgroundColor: '#00f2fe', yAxisID: 'y', tension: 0.35 },
+                    { label: 'NO3', data: reefLogs.map(l => l.no3), borderColor: '#ff4b4b', backgroundColor: '#ff4b4b', yAxisID: 'y', tension: 0.35 },
+                    { label: 'Ca', data: reefLogs.map(l => l.ca), borderColor: '#38ef7d', backgroundColor: '#38ef7d', yAxisID: 'y1', tension: 0.35 },
+                    { label: 'Mg', data: reefLogs.map(l => l.mg), borderColor: '#c084fc', backgroundColor: '#c084fc', yAxisID: 'y1', tension: 0.35 }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: { type: 'linear', position: 'left', title: { display: true, text: 'KH / NO3', color: '#38bdf8' } },
-                    y1: { type: 'linear', position: 'right', title: { display: true, text: 'Ca / Mg', color: '#34d399' }, grid: { drawOnChartArea: false } }
+                    y: { type: 'linear', position: 'left', title: { display: true, text: 'KH / NO3', color: '#00f2fe' } },
+                    y1: { type: 'linear', position: 'right', title: { display: true, text: 'Ca / Mg', color: '#38ef7d' }, grid: { drawOnChartArea: false } }
                 }
             }
         });
