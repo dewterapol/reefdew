@@ -9,19 +9,18 @@
     
     <title>Reef Water Quality Dashboard 40L (AF Hybrid Pro)</title>
     
-    <!-- Google Fonts: Kanit, Prompt, JetBrains Mono -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;800&family=Kanit:wght@500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-    <!-- โหลด Chart.js และ Firebase SDK -->
+    <!-- Chart.js & Firebase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
         :root {
-            /* Color Palette: Deep Ocean & Cyber Neon */
             --bg-main: #0b1325;
             --primary: #00f2fe;
             --primary-hover: #38bdf8;
@@ -31,7 +30,6 @@
             --text-muted: #94a3b8;
             --input-bg: rgba(7, 13, 25, 0.85);
             
-            /* Status Colors */
             --accent-green: #38ef7d;
             --accent-gold: #ffb800;
             --accent-red: #ff4b4b;
@@ -40,15 +38,12 @@
             --ambient-color: rgba(0, 242, 254, 0.25);
             --ambient-glow: 0 0 30px rgba(0, 242, 254, 0.3);
             
-            /* Typography */
             --font-title: 'Kanit', sans-serif;
             --font-body: 'Prompt', sans-serif;
             --font-number: 'JetBrains Mono', monospace;
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             font-family: var(--font-body);
@@ -65,7 +60,6 @@
 
         .container { max-width: 1100px; margin: 0 auto; }
         
-        /* Header Box Design */
         .header-box {
             position: relative;
             text-align: center;
@@ -104,7 +98,6 @@
 
         .sync-status { text-align: center; font-size: 0.8rem; color: var(--accent-green); }
 
-        /* Dashboard Overview Grid (Quick Metrics) */
         .metrics-overview {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -125,7 +118,6 @@
         .metric-card .value { font-family: var(--font-number); font-size: 1.6rem; font-weight: 800; color: var(--primary); margin: 4px 0; }
         .metric-card .unit { font-size: 0.7rem; color: var(--text-muted); }
 
-        /* General Grid & Cards */
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; margin-bottom: 20px; }
         .card { 
             background: var(--card-bg); 
@@ -191,8 +183,8 @@
 
         button:active { transform: scale(0.98); }
         .btn-secondary { background: linear-gradient(135deg, #10b981, #059669); color: white; margin-top: 10px; padding: 10px; font-size: 0.85rem; box-shadow: none; }
+        .btn-wc { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; margin-top: 10px; padding: 12px; font-size: 0.9rem; }
         
-        /* Information Alert & Calculation Boxes */
         .dosing-result { background: rgba(0, 242, 254, 0.06); border-left: 4px solid var(--primary); padding: 14px; margin-top: 12px; border-radius: 0 12px 12px 0; }
         .salt-box { background: rgba(255, 184, 0, 0.08); border-left: 4px solid var(--accent-gold); padding: 14px; margin-top: 12px; border-radius: 0 12px 12px 0; }
         .recommend-box { background: rgba(56, 239, 125, 0.08); border-left: 4px solid var(--accent-green); padding: 14px; margin-top: 12px; border-radius: 0 12px 12px 0; }
@@ -311,7 +303,7 @@
         <div class="sync-status" id="syncStatus">☁️ เชื่อมต่อระบบ Cloud Sync เรียบร้อย</div>
     </div>
 
-    <!-- Quick Metric Cards (สรุปค่าน้ำล่าสุดใน 3 วินาที) -->
+    <!-- Quick Metric Cards -->
     <div class="metrics-overview">
         <div class="metric-card">
             <div class="title">KH (Alk)</div>
@@ -336,66 +328,76 @@
     </div>
 
     <div class="grid">
-        <!-- 1. ตั้งค่า -->
+        <!-- 1. ตั้งค่า & ผสมเกลือ -->
         <div class="card">
-            <h2>⚙️ ตั้งค่าระบบ & ผสมเกลือ</h2>
+            <h2>⚙️ ผสมเกลือ & คำนวณเปลี่ยนน้ำ</h2>
             <div class="form-group">
                 <label>ปริมาณน้ำในระบบ (ลิตร):</label>
                 <input type="number" id="waterVolume" value="40" onchange="calculateDosing(); calculateSalt();">
             </div>
             
-            <label style="font-weight:600; color:var(--accent-gold); margin-top:12px; display:block;">ผสมเกลือ AF Hybrid Pro Salt (390 ml / 10L):</label>
+            <label style="font-weight:600; color:var(--accent-gold); margin-top:12px; display:block;">สูตรผสมเกลือจริง (เกลือ 80ml / น้ำ 3.16L @ 35ppt):</label>
             <div class="form-row">
                 <div class="form-group" style="flex:1;">
                     <label>น้ำเปลี่ยน (ลิตร):</label>
-                    <input type="number" id="changeVolume" value="4" oninput="calculateSalt()">
+                    <input type="number" id="changeVolume" value="3.16" step="0.01" oninput="calculateSalt()">
                 </div>
                 <div class="form-group" style="flex:1;">
                     <label>ความเค็มเป้าหมาย:</label>
-                    <select id="targetSalinity" onchange="calculateSalt(); autoSetTargetBySalt();">
-                        <option value="30">30 ppt (1.022 S.G.)</option>
-                        <option value="33" selected>33 ppt (1.025 S.G.)</option>
-                        <option value="35">35 ppt (1.026 S.G.)</option>
+                    <select id="targetSalinity" onchange="calculateSalt();">
+                        <option value="30">30 ppt</option>
+                        <option value="33">33 ppt</option>
+                        <option value="35" selected>35 ppt (1.026 S.G.)</option>
                     </select>
                 </div>
             </div>
 
             <div class="salt-box">
                 <div class="dosing-item">
-                    <span>ปริมาตรเกลือที่ต้องใช้:</span>
-                    <strong id="saltMl" style="color:var(--accent-gold); font-size: 1.15rem;">0 ml</strong>
+                    <span>ตักเกลือโดยประมาณ:</span>
+                    <strong id="saltMl" style="color:var(--accent-gold); font-size: 1.15rem;">80.0 ml</strong>
                 </div>
                 <div class="dosing-item">
-                    <span style="font-size:0.75rem; color:var(--text-muted);">อัตราส่วนที่ใช้:</span>
-                    <span id="saltRatioText" style="font-size:0.75rem; color:var(--text-muted);">39 ml / น้ำ 1 ลิตร</span>
+                    <span style="font-size:0.75rem; color:var(--text-muted);">อัตราส่วนผสม:</span>
+                    <span id="saltRatioText" style="font-size:0.75rem; color:var(--text-muted);">25.32 ml / น้ำ 1 ลิตร</span>
                 </div>
                 <div class="dosing-item" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:6px;">
-                    <span style="font-size:0.75rem; color:var(--text-muted);">ค่าน้ำเกลือใหม่:</span>
-                    <span id="saltSpecText" style="font-size:0.75rem; color:var(--text-muted);">-</span>
+                    <span style="font-size:0.75rem; color:var(--text-muted);">ค่าน้ำดิบก่อนปรับ:</span>
+                    <span id="saltRawSpecText" style="font-size:0.75rem; color:var(--accent-gold);">KH 7.0 | Ca 410 | Mg 1200</span>
+                </div>
+                <div class="dosing-item" style="margin-top:4px;">
+                    <span style="font-size:0.75rem; color:var(--accent-green);">สูตรเติมโดสปรับน้ำใหม่:</span>
+                    <span id="saltDoseBoostText" style="font-size:0.75rem; color:var(--accent-green); font-weight:600;">+KH 0.50ml | +Ca 4.00ml | +Mg 0.50ml</span>
+                </div>
+                <div class="dosing-item" style="margin-top:4px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:4px;">
+                    <span style="font-size:0.75rem; color:var(--text-muted);">ค่าน้ำเกลือใหม่หลังเติม:</span>
+                    <span id="saltTargetSpecText" style="font-size:0.75rem; color:var(--primary); font-weight:700;">KH 8.6 | Ca 450 | Mg 1320</span>
                 </div>
             </div>
 
-            <label style="font-weight:600; color:var(--primary); margin-top:14px; display:block;">เป้าหมายค่าน้ำ (Target Parameters):</label>
+            <button type="button" class="btn-wc" onclick="saveWaterChangeLog()">🌊 บันทึกประวัติการเปลี่ยนน้ำ (Water Change)</button>
+
+            <label style="font-weight:600; color:var(--primary); margin-top:16px; display:block;">เป้าหมายค่าน้ำตู้หลัก (Target Parameters):</label>
             <div class="form-row">
                 <div class="form-group" style="flex:1;">
                     <label>เป้า KH:</label>
-                    <input type="number" step="0.1" id="targetKH" value="7.5" onchange="calculateDosing()">
+                    <input type="number" step="0.1" id="targetKH" value="8.6" onchange="calculateDosing()">
                 </div>
                 <div class="form-group" style="flex:1;">
                     <label>เป้า Ca:</label>
-                    <input type="number" id="targetCa" value="395" onchange="calculateDosing()">
+                    <input type="number" id="targetCa" value="450" onchange="calculateDosing()">
                 </div>
                 <div class="form-group" style="flex:1;">
                     <label>เป้า Mg:</label>
-                    <input type="number" id="targetMg" value="1265" onchange="calculateDosing()">
+                    <input type="number" id="targetMg" value="1320" onchange="calculateDosing()">
                 </div>
             </div>
             <button type="button" class="btn-secondary" onclick="saveTargetSettings()">💾 บันทึกเป้าหมายค่าน้ำลง Cloud</button>
         </div>
 
-        <!-- 2. บันทึก -->
+        <!-- 2. บันทึกค่าน้ำประจำวัน -->
         <div class="card">
-            <h2>📝 บันทึกค่าน้ำวันนี้</h2>
+            <h2>📝 บันทึกค่าน้ำตู้หลักประจำวัน</h2>
             <form id="logForm">
                 <div class="form-group">
                     <label>วันที่บันทึก:</label>
@@ -404,7 +406,7 @@
                 <div class="form-row">
                     <div class="form-group" style="flex:1;">
                         <label>KH (dKH):</label>
-                        <input type="number" step="0.1" id="currentKH" placeholder="7.5" required oninput="calculateDosing()">
+                        <input type="number" step="0.1" id="currentKH" placeholder="8.6" required oninput="calculateDosing()">
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label>โดสไป (mL):</label>
@@ -414,7 +416,7 @@
                 <div class="form-row">
                     <div class="form-group" style="flex:1;">
                         <label>Ca (ppm):</label>
-                        <input type="number" id="currentCa" placeholder="400" required oninput="calculateDosing()">
+                        <input type="number" id="currentCa" placeholder="450" required oninput="calculateDosing()">
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label>โดสไป (mL):</label>
@@ -424,7 +426,7 @@
                 <div class="form-row">
                     <div class="form-group" style="flex:1;">
                         <label>Mg (ppm):</label>
-                        <input type="number" id="currentMg" placeholder="1260" required oninput="calculateDosing()">
+                        <input type="number" id="currentMg" placeholder="1320" required oninput="calculateDosing()">
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label>โดสไป (mL):</label>
@@ -472,9 +474,30 @@
         <canvas id="paramChart"></canvas>
     </div>
 
-    <!-- History Table Section -->
+    <!-- History Tables Section -->
+    <div class="card" style="margin-bottom: 20px;">
+        <h2>📋 ประวัติการเปลี่ยนน้ำ & ผสมเกลือ (Water Change Log)</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>วันที่เปลี่ยนน้ำ</th>
+                        <th>ปริมาตรน้ำ</th>
+                        <th>ปริมาตรเกลือ</th>
+                        <th>ความเค็ม</th>
+                        <th>ค่าน้ำดิบ (KH/Ca/Mg)</th>
+                        <th>โดสปรับแต่ง (KH/Ca/Mg)</th>
+                        <th>ค่าน้ำใหม่หลังปรับ</th>
+                        <th>ลบ</th>
+                    </tr>
+                </thead>
+                <tbody id="wcHistoryTable"></tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="card">
-        <h2>📋 ประวัติการบันทึก & สถานะความเสถียร</h2>
+        <h2>📋 ประวัติการบันทึกค่าน้ำตู้หลัก</h2>
         <div class="table-responsive">
             <table>
                 <thead>
@@ -500,7 +523,7 @@
     // Firebase Config
     // -------------------------------------------------------------
     const firebaseConfig = {
-       apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
+      apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
   authDomain: "dewreef-838de.firebaseapp.com",
   databaseURL: "https://dewreef-838de-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "dewreef-838de",
@@ -516,23 +539,28 @@
         MAX_NO3_PER_DAY: 5.0
     };
 
-    // ฝังค่าน้ำสเปก AF Hybrid Pro Salt ในระบบคำนวณแบบซ่อนจากหน้าจอ
-    const afSaltSpecs = {
-        30: { ratio: 35.5, khMin: 6.4, khMax: 7.3, caMin: 359, caMax: 375, mgMin: 1120, mgMax: 1190, avgKH: 6.8, avgCa: 367, avgMg: 1155 },
-        33: { ratio: 39.0, khMin: 7.3, khMax: 7.6, caMin: 380, caMax: 410, mgMin: 1230, mgMax: 1300, avgKH: 7.5, avgCa: 395, avgMg: 1265 },
-        35: { ratio: 41.3, khMin: 7.7, khMax: 8.4, caMin: 415, caMax: 440, mgMin: 1310, mgMax: 1380, avgKH: 8.0, avgCa: 427, avgMg: 1345 }
+    // อัปเดตสเปกจริงล่าสุด: น้ำ 3.16L + เกลือ 80ml @ 35ppt (25.316 ml เกลือ / L)
+    const saltRealSpec = {
+        baseVolume: 3.16, // น้ำ 3L + 160ml
+        baseSaltMl: 80,   // เกลือ 80ml
+        ratioPerLiter: 80 / 3.16, // 25.316 ml/L
+        raw: { kh: 7.0, ca: 410, mg: 1200 },
+        boostBase: { khDose: 0.5, caDose: 4.0, mgDose: 0.5 },
+        boosted: { kh: 8.6, ca: 450, mg: 1320 }
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const logsRef = db.ref('reefLogs');
     const targetRef = db.ref('reefTargetSettings');
+    const waterChangeRef = db.ref('reefWaterChanges');
 
     document.getElementById('logDate').valueAsDate = new Date();
     let reefLogs = [];
+    let wcLogs = [];
     let myChart = null;
 
-    // Ambient Light Control
+    // Ambient Light System
     function updateAmbientLight() {
         const now = new Date();
         const currentTime = now.getHours() + now.getMinutes() / 60;
@@ -594,13 +622,11 @@
         if (tapLength < 300 && tapLength > 0) {
             const todayStr = new Date().toDateString();
             localStorage.setItem('fishFedDate', todayStr);
-            
             fishContainer.style.opacity = '0';
             setTimeout(() => {
                 fishContainer.style.display = 'none';
                 fishContainer.style.opacity = '1';
             }, 500);
-
             e.preventDefault();
         }
         lastTapTime = currentTime;
@@ -616,7 +642,6 @@
         }, 500);
     });
 
-    // Draggable Fish Engine
     let isDragging = false, hasMoved = false;
     let currentX, currentY, initialX, initialY;
     let xOffset = 0, yOffset = 0;
@@ -700,13 +725,25 @@
         document.getElementById('syncStatus').innerText = '☁️ ซิงค์ข้อมูลข้ามเครื่องเรียบร้อยแล้ว';
     });
 
+    waterChangeRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        wcLogs = [];
+        if (data) {
+            Object.keys(data).forEach(key => {
+                wcLogs.push({ firebaseKey: key, ...data[key] });
+            });
+            wcLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+        renderWaterChangeTable();
+    });
+
     function saveTargetSettings() {
         const targetData = {
             waterVolume: parseFloat(document.getElementById('waterVolume').value) || 40,
             targetSalinity: document.getElementById('targetSalinity').value,
-            targetKH: parseFloat(document.getElementById('targetKH').value) || 7.5,
-            targetCa: parseFloat(document.getElementById('targetCa').value) || 395,
-            targetMg: parseFloat(document.getElementById('targetMg').value) || 1265
+            targetKH: parseFloat(document.getElementById('targetKH').value) || 8.6,
+            targetCa: parseFloat(document.getElementById('targetCa').value) || 450,
+            targetMg: parseFloat(document.getElementById('targetMg').value) || 1320
         };
 
         targetRef.set(targetData).then(() => {
@@ -718,26 +755,76 @@
 
     function calculateSalt() {
         const changeVol = parseFloat(document.getElementById('changeVolume').value) || 0;
-        const targetPPT = parseInt(document.getElementById('targetSalinity').value) || 33;
+        const targetPPT = parseInt(document.getElementById('targetSalinity').value) || 35;
         
-        const spec = afSaltSpecs[targetPPT];
-        if (spec) {
-            const saltMl = changeVol * spec.ratio;
-            document.getElementById('saltMl').innerText = saltMl.toFixed(1) + ' ml';
-            document.getElementById('saltRatioText').innerText = `${spec.ratio} ml / น้ำ 1 ลิตร`;
-            document.getElementById('saltSpecText').innerText = `KH ${spec.khMin}-${spec.khMax} | Ca ${spec.caMin}-${spec.caMax} | Mg ${spec.mgMin}-${spec.mgMax}`;
+        let ratio = saltRealSpec.ratioPerLiter;
+        if (targetPPT === 33) ratio = ratio * (33 / 35);
+        if (targetPPT === 30) ratio = ratio * (30 / 35);
+
+        const saltMl = changeVol * ratio;
+        const factor = changeVol / saltRealSpec.baseVolume;
+
+        const khDose = (saltRealSpec.boostBase.khDose * factor).toFixed(2);
+        const caDose = (saltRealSpec.boostBase.caDose * factor).toFixed(2);
+        const mgDose = (saltRealSpec.boostBase.mgDose * factor).toFixed(2);
+
+        document.getElementById('saltMl').innerText = saltMl.toFixed(1) + ' ml';
+        document.getElementById('saltRatioText').innerText = `${ratio.toFixed(2)} ml / น้ำ 1 ลิตร`;
+        document.getElementById('saltRawSpecText').innerText = `KH ${saltRealSpec.raw.kh} | Ca ${saltRealSpec.raw.ca} | Mg ${saltRealSpec.raw.mg}`;
+        document.getElementById('saltDoseBoostText').innerText = `+KH ${khDose}ml | +Ca ${caDose}ml | +Mg ${mgDose}ml`;
+        document.getElementById('saltTargetSpecText').innerText = `KH ${saltRealSpec.boosted.kh} | Ca ${saltRealSpec.boosted.ca} | Mg ${saltRealSpec.boosted.mg}`;
+    }
+
+    function saveWaterChangeLog() {
+        const changeVol = parseFloat(document.getElementById('changeVolume').value) || 3.16;
+        const targetPPT = parseInt(document.getElementById('targetSalinity').value) || 35;
+        const saltMl = parseFloat(document.getElementById('saltMl').innerText) || 80;
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        const factor = changeVol / saltRealSpec.baseVolume;
+        const khDose = (saltRealSpec.boostBase.khDose * factor).toFixed(2);
+        const caDose = (saltRealSpec.boostBase.caDose * factor).toFixed(2);
+        const mgDose = (saltRealSpec.boostBase.mgDose * factor).toFixed(2);
+
+        const wcData = {
+            date: todayStr,
+            volume: changeVol,
+            saltMl: saltMl,
+            salinity: targetPPT,
+            rawParams: `${saltRealSpec.raw.kh}/${saltRealSpec.raw.ca}/${saltRealSpec.raw.mg}`,
+            dosed: `${khDose}/${caDose}/${mgDose}`,
+            boostedParams: `${saltRealSpec.boosted.kh}/${saltRealSpec.boosted.ca}/${saltRealSpec.boosted.mg}`
+        };
+
+        waterChangeRef.push(wcData).then(() => {
+            alert('🌊 บันทึกประวัติการเปลี่ยนน้ำเรียบร้อยแล้ว!');
+        });
+    }
+
+    function deleteWCLog(key) {
+        if(confirm('คุณต้องการลบรายการเปลี่ยนน้ำนี้หรือไม่?')) {
+            waterChangeRef.child(key).remove();
         }
     }
 
-    function autoSetTargetBySalt() {
-        const ppt = parseInt(document.getElementById('targetSalinity').value) || 33;
-        const spec = afSaltSpecs[ppt];
-        if (spec) {
-            document.getElementById('targetKH').value = spec.avgKH;
-            document.getElementById('targetCa').value = spec.avgCa;
-            document.getElementById('targetMg').value = spec.avgMg;
-            calculateDosing();
-        }
+    function renderWaterChangeTable() {
+        const tbody = document.getElementById('wcHistoryTable');
+        tbody.innerHTML = '';
+
+        wcLogs.forEach((log) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${log.date}</td>
+                <td>${log.volume} ลิตร</td>
+                <td>${log.saltMl} ml</td>
+                <td>${log.salinity} ppt</td>
+                <td>${log.rawParams}</td>
+                <td><span style="color:var(--accent-green);">${log.dosed}</span></td>
+                <td><span style="color:var(--primary); font-weight:600;">${log.boostedParams}</span></td>
+                <td><button class="btn-delete" onclick="deleteWCLog('${log.firebaseKey}')">ลบ</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 
     function calculateDosing() {
@@ -886,7 +973,9 @@
     });
 
     function deleteLog(key) {
-        logsRef.child(key).remove();
+        if(confirm('คุณต้องการลบค่าน้ำประจำวันรายการนี้หรือไม่?')) {
+            logsRef.child(key).remove();
+        }
     }
 
     function updateApp() {
