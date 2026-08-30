@@ -214,9 +214,6 @@
         th { background-color: rgba(0, 242, 254, 0.08); color: var(--primary); font-weight: 600; }
         td { font-family: var(--font-number); }
         
-        .val-up { color: var(--accent-green); font-size: 0.75rem; }
-        .val-down { color: var(--accent-red); font-size: 0.75rem; }
-        
         .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; font-family: var(--font-body); }
         .badge-success { background: rgba(56, 239, 125, 0.15); color: var(--accent-green); border: 1px solid rgba(56, 239, 125, 0.3); }
         .badge-warning { background: rgba(255, 184, 0, 0.15); color: var(--accent-gold); border: 1px solid rgba(255, 184, 0, 0.3); }
@@ -380,11 +377,11 @@
                 </div>
                 <div class="dosing-item" style="margin-top:4px;">
                     <span style="font-size:0.75rem; color:var(--accent-green);">สูตรเติมโดสปรับน้ำใหม่:</span>
-                    <span id="saltDoseBoostText" style="font-size:0.75rem; color:var(--accent-green); font-weight:600;">+KH 0.50ml | +Ca 4.00ml | +Mg 0.50ml</span>
+                    <span id="saltDoseBoostText" style="font-size:0.75rem; color:var(--accent-green); font-weight:600;">+KH 0.50ml | +Ca 4.00ml | +Mg 1.20ml</span>
                 </div>
                 <div class="dosing-item" style="margin-top:4px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:4px;">
                     <span style="font-size:0.75rem; color:var(--text-muted);">ค่าน้ำเกลือใหม่หลังเติม:</span>
-                    <span id="saltTargetSpecText" style="font-size:0.75rem; color:var(--primary); font-weight:700;">KH 8.6 | Ca 450 | Mg 1320</span>
+                    <span id="saltTargetSpecText" style="font-size:0.75rem; color:var(--primary); font-weight:700;">KH 8.6 | Ca 450 | Mg 1350</span>
                 </div>
             </div>
 
@@ -402,7 +399,7 @@
                 </div>
                 <div class="form-group" style="flex:1;">
                     <label>เป้า Mg:</label>
-                    <input type="number" id="targetMg" value="1320" onchange="calculateDosing()">
+                    <input type="number" id="targetMg" value="1350" onchange="calculateDosing()">
                 </div>
             </div>
             <button type="button" class="btn-secondary" onclick="saveTargetSettings()">💾 บันทึกเป้าหมายค่าน้ำลง Cloud</button>
@@ -439,7 +436,7 @@
                 <div class="form-row">
                     <div class="form-group" style="flex:1;">
                         <label>Mg (ppm):</label>
-                        <input type="number" id="currentMg" placeholder="1320" required oninput="calculateDosing()">
+                        <input type="number" id="currentMg" placeholder="1350" required oninput="calculateDosing()">
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label>โดสไป (mL):</label>
@@ -460,7 +457,7 @@
             
             <div id="safetyAlert" class="alert-box"></div>
 
-            <label style="font-weight:600; color:var(--primary); display:block;">โดสเพื่อปรับเข้าสู่เป้าหมาย (Safety Dosing):</label>
+            <label style="font-weight:600; color:var(--primary); display:block;">โดสปรับเข้าสู่เป้าหมาย (Correction Dosing):</label>
             <div class="dosing-result">
                 <div class="dosing-item"><span>KH Buffer:</span><strong id="doseKH">0 ml</strong></div>
                 <div class="dosing-sub" id="doseKHPlan"></div>
@@ -472,7 +469,7 @@
                 <div class="dosing-sub" id="doseMgPlan"></div>
             </div>
 
-            <label style="font-weight:600; color:var(--accent-green); margin-top:12px; display:block;">อัตราสิ้นเปลืองและโดสประคองรายวัน:</label>
+            <label style="font-weight:600; color:var(--accent-green); margin-top:12px; display:block;">โดสประคองค่าน้ำนิ่ง (Maintenance Dosing):</label>
             <div class="recommend-box">
                 <div class="dosing-item"><span>KH (ประจำวัน):</span><strong id="recKH" style="color:var(--accent-green)">- ml/วัน</strong></div>
                 <div class="dosing-item"><span>Ca (ประจำวัน):</span><strong id="recCa" style="color:var(--accent-green)">- ml/วัน</strong></div>
@@ -549,21 +546,22 @@
         appId: "1:219612211355:web:9275b47ae7ebc997977e3e"
     };
 
+    // Safety Limits (สูงสุดต่อวันสำหรับตู้ 40L)
     const LIMITS = {
-        MAX_KH_PER_DAY: 0.5,
-        MAX_CA_PER_DAY: 20,
-        MAX_MG_PER_DAY: 50,
+        MAX_KH_PER_DAY: 0.5,  // dKH/day (ไม่เกิน ~2.0 mL)
+        MAX_CA_PER_DAY: 20,   // ppm/day (ไม่เกิน ~8.0 mL)
+        MAX_MG_PER_DAY: 50,   // ppm/day (ไม่เกิน ~20.0 mL)
         MAX_NO3_PER_DAY: 5.0
     };
 
-    // อัปเดตสเปกจริงล่าสุด: น้ำ 3.16L + เกลือ 80ml @ 35ppt (25.316 ml เกลือ / L)
+    // อัปเดตสเปกจริง: น้ำ 3.16L + เกลือ 80ml @ 35ppt (ปรับ Target Mg เป็น 1350)
     const saltRealSpec = {
         baseVolume: 3.16,
         baseSaltMl: 80,
         ratioPerLiter: 80 / 3.16,
         raw: { kh: 7.0, ca: 410, mg: 1200 },
-        boostBase: { khDose: 0.5, caDose: 4.0, mgDose: 0.5 },
-        boosted: { kh: 8.6, ca: 450, mg: 1320 }
+        boostBase: { khDose: 0.5, caDose: 4.0, mgDose: 1.2 }, // Boost ถึง KH 8.6 / Ca 450 / Mg 1350
+        boosted: { kh: 8.6, ca: 450, mg: 1350 }
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -634,7 +632,7 @@
     // Schedule & Dosing Reminder System (วันเสาร์ / วันเว้นวัน)
     function updateScheduleNotice() {
         const now = new Date();
-        const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+        const dayOfWeek = now.getDay(); 
         const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
         const isAlternateDosingDay = (dayOfYear % 2 === 0);
         const noticeEl = document.getElementById('scheduleNotice');
@@ -790,7 +788,6 @@
         const waterVol = parseFloat(document.getElementById('changeVolume').value) || 0;
         const targetSalinity = parseFloat(document.getElementById('targetSalinity').value) || 35;
         
-        // คำนวณเกลือ base อ้างอิง 35ppt
         const saltRatio = saltRealSpec.ratioPerLiter * (targetSalinity / 35);
         const saltNeededMl = waterVol * saltRatio;
 
@@ -803,10 +800,11 @@
         const boostMg = saltRealSpec.boostBase.mgDose * scale;
 
         document.getElementById('saltDoseBoostText').innerText = `+KH ${boostKH.toFixed(2)}ml | +Ca ${boostCa.toFixed(2)}ml | +Mg ${boostMg.toFixed(2)}ml`;
+        document.getElementById('saltTargetSpecText').innerText = `KH ${saltRealSpec.boosted.kh} | Ca ${saltRealSpec.boosted.ca} | Mg ${saltRealSpec.boosted.mg}`;
     }
 
     // -------------------------------------------------------------
-    // คำนวณ Dosing และ Safety for 40L
+    // คำนวณ Dosing และ Safety (สำหรับเป้าหมาย KH 8.6, Ca 450, Mg 1350)
     // -------------------------------------------------------------
     function calculateDosing() {
         const systemVol = parseFloat(document.getElementById('waterVolume').value) || 40;
@@ -816,7 +814,7 @@
 
         const targetKH = parseFloat(document.getElementById('targetKH').value) || 8.6;
         const targetCa = parseFloat(document.getElementById('targetCa').value) || 450;
-        const targetMg = parseFloat(document.getElementById('targetMg').value) || 1320;
+        const targetMg = parseFloat(document.getElementById('targetMg').value) || 1350;
 
         if (isNaN(currentKH) || isNaN(currentCa) || isNaN(currentMg)) {
             document.getElementById('doseKH').innerText = '0 ml';
@@ -829,49 +827,48 @@
             return;
         }
 
-        // สูตรคำนวณโดสสำหรับตู้ 40L (Aquaforest / Standard Reef Additives)
-        // KH: 10ml/100L เพิ่ม KH 1.0 dKH -> (diff * vol / 100) * 10 = diff * vol / 10
+        // สูตรอ้างอิงตู้ 40 ลิตร:
+        // KH: (diff * 40 / 10) = diff * 4.0 mL
         const diffKH = Math.max(0, targetKH - currentKH);
-        const reqKH = (diffKH * systemVol) / 10;
+        const reqKH = diffKH * 4.0;
 
-        // Ca: 10ml/100L เพิ่ม Ca 10 ppm -> (diff / 10) * (vol / 100) * 10 = diff * vol / 100
+        // Ca: (diff / 10) * (40 / 100) * 10 = (diff / 10) * 4.0 mL
         const diffCa = Math.max(0, targetCa - currentCa);
-        const reqCa = (diffCa * systemVol) / 100;
+        const reqCa = (diffCa / 10) * 4.0;
 
-        // Mg: 10ml/100L เพิ่ม Mg 10 ppm -> diff * vol / 100
+        // Mg: (diff / 10) * (40 / 100) * 10 = (diff / 10) * 4.0 mL
         const diffMg = Math.max(0, targetMg - currentMg);
-        const reqMg = (diffMg * systemVol) / 100;
+        const reqMg = (diffMg / 10) * 4.0;
 
         document.getElementById('doseKH').innerText = reqKH.toFixed(1) + ' ml';
         document.getElementById('doseCa').innerText = reqCa.toFixed(1) + ' ml';
         document.getElementById('doseMg').innerText = reqMg.toFixed(1) + ' ml';
 
-        // คำนวณแผนการทยอยเติมกรณีต่างกันเยอะ
-        const maxKhDiffPerDay = LIMITS.MAX_KH_PER_DAY;
-        const daysKH = Math.ceil(diffKH / maxKhDiffPerDay);
+        // คำนวณแบ่งเติมเพื่อความปลอดภัย
+        const daysKH = Math.ceil(diffKH / LIMITS.MAX_KH_PER_DAY);
         if (daysKH > 1) {
-            document.getElementById('doseKHPlan').innerText = `⚠️ แนะนำแบ่งเติมวันละ ${(reqKH / daysKH).toFixed(1)} ml เป็นเวลา ${daysKH} วัน`;
+            document.getElementById('doseKHPlan').innerText = `⚠️ แบ่งเติมวันละ ${(reqKH / daysKH).toFixed(1)} ml เป็นเวลา ${daysKH} วัน (จำกัด +0.5 dKH/วัน)`;
         } else {
             document.getElementById('doseKHPlan').innerText = 'สามารถเติมได้ในครั้งเดียว';
         }
 
         const daysCa = Math.ceil(diffCa / LIMITS.MAX_CA_PER_DAY);
         if (daysCa > 1) {
-            document.getElementById('doseCaPlan').innerText = `⚠️ แนะนำแบ่งเติมวันละ ${(reqCa / daysCa).toFixed(1)} ml เป็นเวลา ${daysCa} วัน`;
+            document.getElementById('doseCaPlan').innerText = `⚠️ แบ่งเติมวันละ ${(reqCa / daysCa).toFixed(1)} ml เป็นเวลา ${daysCa} วัน (จำกัด +20 ppm/วัน)`;
         } else {
             document.getElementById('doseCaPlan').innerText = 'สามารถเติมได้ในครั้งเดียว';
         }
 
         const daysMg = Math.ceil(diffMg / LIMITS.MAX_MG_PER_DAY);
         if (daysMg > 1) {
-            document.getElementById('doseMgPlan').innerText = `⚠️ แนะนำแบ่งเติมวันละ ${(reqMg / daysMg).toFixed(1)} ml เป็นเวลา ${daysMg} วัน`;
+            document.getElementById('doseMgPlan').innerText = `⚠️ แบ่งเติมวันละ ${(reqMg / daysMg).toFixed(1)} ml เป็นเวลา ${daysMg} วัน (จำกัด +50 ppm/วัน)`;
         } else {
             document.getElementById('doseMgPlan').innerText = 'สามารถเติมได้ในครั้งเดียว';
         }
 
         // Safety Warnings
         let alerts = [];
-        if (diffKH > 1.0) alerts.push("⚠️ ค่า KH ต่างจากเป้าหมายเกิน 1.0 dKH ควรค่อยๆ ปรับเพื่อป้องกันปะการังช็อก");
+        if (diffKH > 1.0) alerts.push("⚠️ ค่า KH ต่างจากเป้าหมายเกิน 1.0 dKH ค่อยๆ ปรับเพิ่มวันละไม่เกิน 0.5 dKH (2.0 mL/วัน)");
         if (diffCa > 50) alerts.push("⚠️ ค่า Calcium ต่ำกว่าเป้าหมายเกิน 50 ppm");
         if (diffMg > 100) alerts.push("⚠️ ค่า Magnesium ต่ำกว่าเป้าหมายเกิน 100 ppm");
 
@@ -903,16 +900,14 @@
         const date2 = new Date(latest.date);
         const diffDays = Math.max(1, (date2 - date1) / (1000 * 60 * 60 * 24));
 
-        const systemVol = parseFloat(document.getElementById('waterVolume').value) || 40;
+        // คำนวณอัตราบริโภคจริง (การลดลง + โดสที่เคยเติมไป)
+        const khDrop = (previous.kh - latest.kh) + ((parseFloat(latest.dosedKH) || 0) / 4.0);
+        const caDrop = (previous.ca - latest.ca) + (((parseFloat(latest.dosedCa) || 0) / 4.0) * 10);
+        const mgDrop = (previous.mg - latest.mg) + (((parseFloat(latest.dosedMg) || 0) / 4.0) * 10);
 
-        // คำนวณการเปลี่ยนแปลง + โดสที่เติมเข้าไประหว่างงวด
-        const khDrop = (previous.kh - latest.kh) + (parseFloat(latest.dosedKH) || 0) * (10 / systemVol);
-        const caDrop = (previous.ca - latest.ca) + (parseFloat(latest.dosedCa) || 0) * (100 / systemVol);
-        const mgDrop = (previous.mg - latest.mg) + (parseFloat(latest.dosedMg) || 0) * (100 / systemVol);
-
-        const khPerDay = Math.max(0, (khDrop / diffDays) * (systemVol / 10));
-        const caPerDay = Math.max(0, (caDrop / diffDays) * (systemVol / 100));
-        const mgPerDay = Math.max(0, (mgDrop / diffDays) * (systemVol / 100));
+        const khPerDay = Math.max(0, (khDrop / diffDays) * 4.0);
+        const caPerDay = Math.max(0, ((caDrop / 10) / diffDays) * 4.0);
+        const mgPerDay = Math.max(0, ((mgDrop / 10) / diffDays) * 4.0);
 
         document.getElementById('recKH').innerText = khPerDay.toFixed(1) + ' ml/วัน';
         document.getElementById('recCa').innerText = caPerDay.toFixed(1) + ' ml/วัน';
@@ -934,10 +929,10 @@
             targetSalinity: parseFloat(document.getElementById('targetSalinity').value) || 35,
             targetKH: parseFloat(document.getElementById('targetKH').value) || 8.6,
             targetCa: parseFloat(document.getElementById('targetCa').value) || 450,
-            targetMg: parseFloat(document.getElementById('targetMg').value) || 1320
+            targetMg: parseFloat(document.getElementById('targetMg').value) || 1350
         };
         targetRef.set(data).then(() => {
-            alert('💾 บันทึกเป้าหมายค่าน้ำสำเร็จ!');
+            alert('💾 บันทึกเป้าหมายค่าน้ำ (KH 8.6 / Ca 450 / Mg 1350) สำเร็จ!');
         });
     }
 
@@ -969,7 +964,7 @@
             salinity: document.getElementById('targetSalinity').value,
             rawSpec: "KH 7.0 | Ca 410 | Mg 1200",
             doseBoost: document.getElementById('saltDoseBoostText').innerText,
-            targetSpec: "KH 8.6 | Ca 450 | Mg 1320"
+            targetSpec: "KH 8.6 | Ca 450 | Mg 1350"
         };
 
         waterChangeRef.push(wcData).then(() => {
