@@ -98,6 +98,18 @@
 
         .sync-status { text-align: center; font-size: 0.8rem; color: var(--accent-green); }
 
+        .schedule-notice {
+            margin-top: 10px;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            display: inline-block;
+            background: rgba(192, 132, 252, 0.15);
+            border: 1px solid rgba(192, 132, 252, 0.4);
+            color: var(--accent-purple);
+        }
+
         .metrics-overview {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -301,6 +313,7 @@
         <h1>REEF WATER LOG 40L</h1>
         <div class="light-status-bar" id="lightBadge">💡 กำลังโหลดสถานะแสงไฟ...</div>
         <div class="sync-status" id="syncStatus">☁️ เชื่อมต่อระบบ Cloud Sync เรียบร้อย</div>
+        <div class="schedule-notice" id="scheduleNotice">📅 กำลังคำนวณตารางโดส...</div>
     </div>
 
     <!-- Quick Metric Cards -->
@@ -443,7 +456,7 @@
 
         <!-- 3. แนะนำโดส & ความปลอดภัย -->
         <div class="card">
-            <h2>🧪 แนะนำโดส & อัตราสิ้นเปลือง</h2>
+            <h2>🧪 แนะนำโดส & อัตราสิ้นเปลือง (40L)</h2>
             
             <div id="safetyAlert" class="alert-box"></div>
 
@@ -464,6 +477,10 @@
                 <div class="dosing-item"><span>KH (ประจำวัน):</span><strong id="recKH" style="color:var(--accent-green)">- ml/วัน</strong></div>
                 <div class="dosing-item"><span>Ca (ประจำวัน):</span><strong id="recCa" style="color:var(--accent-green)">- ml/วัน</strong></div>
                 <div class="dosing-item"><span>Mg (ประจำวัน):</span><strong id="recMg" style="color:var(--accent-green)">- ml/วัน</strong></div>
+                <div class="dosing-item" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:6px;">
+                    <span style="font-size:0.75rem; color:var(--accent-purple);">คำแนะนำแบบวันเว้นวัน:</span>
+                    <span id="alternateDoseText" style="font-size:0.75rem; color:var(--accent-purple); font-weight:600;">-</span>
+                </div>
             </div>
         </div>
     </div>
@@ -523,13 +540,13 @@
     // Firebase Config
     // -------------------------------------------------------------
     const firebaseConfig = {
-      apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
-  authDomain: "dewreef-838de.firebaseapp.com",
-  databaseURL: "https://dewreef-838de-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "dewreef-838de",
-  storageBucket: "dewreef-838de.firebasestorage.app",
-  messagingSenderId: "219612211355",
-  appId: "1:219612211355:web:9275b47ae7ebc997977e3e"
+        apiKey: "AIzaSyCx0Kc1iWkYLeJXw6ZUC3TESLxGMrsbW_M",
+        authDomain: "dewreef-838de.firebaseapp.com",
+        databaseURL: "https://dewreef-838de-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "dewreef-838de",
+        storageBucket: "dewreef-838de.firebasestorage.app",
+        messagingSenderId: "219612211355",
+        appId: "1:219612211355:web:9275b47ae7ebc997977e3e"
     };
 
     const LIMITS = {
@@ -541,9 +558,9 @@
 
     // อัปเดตสเปกจริงล่าสุด: น้ำ 3.16L + เกลือ 80ml @ 35ppt (25.316 ml เกลือ / L)
     const saltRealSpec = {
-        baseVolume: 3.16, // น้ำ 3L + 160ml
-        baseSaltMl: 80,   // เกลือ 80ml
-        ratioPerLiter: 80 / 3.16, // 25.316 ml/L
+        baseVolume: 3.16,
+        baseSaltMl: 80,
+        ratioPerLiter: 80 / 3.16,
         raw: { kh: 7.0, ca: 410, mg: 1200 },
         boostBase: { khDose: 0.5, caDose: 4.0, mgDose: 0.5 },
         boosted: { kh: 8.6, ca: 450, mg: 1320 }
@@ -612,6 +629,34 @@
             fishContainer.style.display = 'none';
             fishBubble.style.display = 'none';
         }
+    }
+
+    // Schedule & Dosing Reminder System (วันเสาร์ / วันเว้นวัน)
+    function updateScheduleNotice() {
+        const now = new Date();
+        const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+        const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+        const isAlternateDosingDay = (dayOfYear % 2 === 0);
+        const noticeEl = document.getElementById('scheduleNotice');
+
+        let message = "";
+        if (dayOfWeek === 6) {
+            message = "⚠️ <b>วันนี้วันเสาร์:</b> ถึงกำหนดวัดค่าน้ำตู้หลัก + โดสประคองรายสัปดาห์!";
+            noticeEl.style.background = "rgba(255, 184, 0, 0.2)";
+            noticeEl.style.borderColor = "var(--accent-gold)";
+            noticeEl.style.color = "var(--accent-gold)";
+        } else if (isAlternateDosingDay) {
+            message = "🧪 <b>กำหนดการวันนี้:</b> วันเติมโดสประคอง (วันเว้นวัน)";
+            noticeEl.style.background = "rgba(56, 239, 125, 0.15)";
+            noticeEl.style.borderColor = "var(--accent-green)";
+            noticeEl.style.color = "var(--accent-green)";
+        } else {
+            message = "😴 <b>กำหนดการวันนี้:</b> วันพักตู้ (เว้นการเติมโดสประคอง)";
+            noticeEl.style.background = "rgba(148, 163, 184, 0.15)";
+            noticeEl.style.borderColor = "var(--text-muted)";
+            noticeEl.style.color = "var(--text-muted)";
+        }
+        noticeEl.innerHTML = message;
     }
 
     let lastTapTime = 0;
@@ -696,6 +741,7 @@
 
     updateAmbientLight();
     updateFeedingAlert();
+    updateScheduleNotice();
     setInterval(updateAmbientLight, 60000);
     setInterval(updateFeedingAlert, 60000);
 
@@ -734,223 +780,170 @@
             });
             wcLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
         }
-        renderWaterChangeTable();
+        renderWCHistoryTable();
     });
 
+    // -------------------------------------------------------------
+    // คำนวณผสมเกลือ
+    // -------------------------------------------------------------
+    function calculateSalt() {
+        const waterVol = parseFloat(document.getElementById('changeVolume').value) || 0;
+        const targetSalinity = parseFloat(document.getElementById('targetSalinity').value) || 35;
+        
+        // คำนวณเกลือ base อ้างอิง 35ppt
+        const saltRatio = saltRealSpec.ratioPerLiter * (targetSalinity / 35);
+        const saltNeededMl = waterVol * saltRatio;
+
+        document.getElementById('saltMl').innerText = saltNeededMl.toFixed(1) + ' ml';
+        document.getElementById('saltRatioText').innerText = saltRatio.toFixed(2) + ' ml / น้ำ 1 ลิตร';
+        
+        const scale = waterVol / saltRealSpec.baseVolume;
+        const boostKH = saltRealSpec.boostBase.khDose * scale;
+        const boostCa = saltRealSpec.boostBase.caDose * scale;
+        const boostMg = saltRealSpec.boostBase.mgDose * scale;
+
+        document.getElementById('saltDoseBoostText').innerText = `+KH ${boostKH.toFixed(2)}ml | +Ca ${boostCa.toFixed(2)}ml | +Mg ${boostMg.toFixed(2)}ml`;
+    }
+
+    // -------------------------------------------------------------
+    // คำนวณ Dosing และ Safety for 40L
+    // -------------------------------------------------------------
+    function calculateDosing() {
+        const systemVol = parseFloat(document.getElementById('waterVolume').value) || 40;
+        const currentKH = parseFloat(document.getElementById('currentKH').value);
+        const currentCa = parseFloat(document.getElementById('currentCa').value);
+        const currentMg = parseFloat(document.getElementById('currentMg').value);
+
+        const targetKH = parseFloat(document.getElementById('targetKH').value) || 8.6;
+        const targetCa = parseFloat(document.getElementById('targetCa').value) || 450;
+        const targetMg = parseFloat(document.getElementById('targetMg').value) || 1320;
+
+        if (isNaN(currentKH) || isNaN(currentCa) || isNaN(currentMg)) {
+            document.getElementById('doseKH').innerText = '0 ml';
+            document.getElementById('doseCa').innerText = '0 ml';
+            document.getElementById('doseMg').innerText = '0 ml';
+            document.getElementById('doseKHPlan').innerText = '';
+            document.getElementById('doseCaPlan').innerText = '';
+            document.getElementById('doseMgPlan').innerText = '';
+            document.getElementById('safetyAlert').style.display = 'none';
+            return;
+        }
+
+        // สูตรคำนวณโดสสำหรับตู้ 40L (Aquaforest / Standard Reef Additives)
+        // KH: 10ml/100L เพิ่ม KH 1.0 dKH -> (diff * vol / 100) * 10 = diff * vol / 10
+        const diffKH = Math.max(0, targetKH - currentKH);
+        const reqKH = (diffKH * systemVol) / 10;
+
+        // Ca: 10ml/100L เพิ่ม Ca 10 ppm -> (diff / 10) * (vol / 100) * 10 = diff * vol / 100
+        const diffCa = Math.max(0, targetCa - currentCa);
+        const reqCa = (diffCa * systemVol) / 100;
+
+        // Mg: 10ml/100L เพิ่ม Mg 10 ppm -> diff * vol / 100
+        const diffMg = Math.max(0, targetMg - currentMg);
+        const reqMg = (diffMg * systemVol) / 100;
+
+        document.getElementById('doseKH').innerText = reqKH.toFixed(1) + ' ml';
+        document.getElementById('doseCa').innerText = reqCa.toFixed(1) + ' ml';
+        document.getElementById('doseMg').innerText = reqMg.toFixed(1) + ' ml';
+
+        // คำนวณแผนการทยอยเติมกรณีต่างกันเยอะ
+        const maxKhDiffPerDay = LIMITS.MAX_KH_PER_DAY;
+        const daysKH = Math.ceil(diffKH / maxKhDiffPerDay);
+        if (daysKH > 1) {
+            document.getElementById('doseKHPlan').innerText = `⚠️ แนะนำแบ่งเติมวันละ ${(reqKH / daysKH).toFixed(1)} ml เป็นเวลา ${daysKH} วัน`;
+        } else {
+            document.getElementById('doseKHPlan').innerText = 'สามารถเติมได้ในครั้งเดียว';
+        }
+
+        const daysCa = Math.ceil(diffCa / LIMITS.MAX_CA_PER_DAY);
+        if (daysCa > 1) {
+            document.getElementById('doseCaPlan').innerText = `⚠️ แนะนำแบ่งเติมวันละ ${(reqCa / daysCa).toFixed(1)} ml เป็นเวลา ${daysCa} วัน`;
+        } else {
+            document.getElementById('doseCaPlan').innerText = 'สามารถเติมได้ในครั้งเดียว';
+        }
+
+        const daysMg = Math.ceil(diffMg / LIMITS.MAX_MG_PER_DAY);
+        if (daysMg > 1) {
+            document.getElementById('doseMgPlan').innerText = `⚠️ แนะนำแบ่งเติมวันละ ${(reqMg / daysMg).toFixed(1)} ml เป็นเวลา ${daysMg} วัน`;
+        } else {
+            document.getElementById('doseMgPlan').innerText = 'สามารถเติมได้ในครั้งเดียว';
+        }
+
+        // Safety Warnings
+        let alerts = [];
+        if (diffKH > 1.0) alerts.push("⚠️ ค่า KH ต่างจากเป้าหมายเกิน 1.0 dKH ควรค่อยๆ ปรับเพื่อป้องกันปะการังช็อก");
+        if (diffCa > 50) alerts.push("⚠️ ค่า Calcium ต่ำกว่าเป้าหมายเกิน 50 ppm");
+        if (diffMg > 100) alerts.push("⚠️ ค่า Magnesium ต่ำกว่าเป้าหมายเกิน 100 ppm");
+
+        const alertBox = document.getElementById('safetyAlert');
+        if (alerts.length > 0) {
+            alertBox.innerHTML = alerts.join('<br>');
+            alertBox.style.display = 'block';
+        } else {
+            alertBox.style.display = 'none';
+        }
+    }
+
+    // -------------------------------------------------------------
+    // คำนวณอัตราสิ้นเปลือง และ โดสประคองรายวัน / วันเว้นวัน
+    // -------------------------------------------------------------
+    function calculateConsumption() {
+        if (reefLogs.length < 2) {
+            document.getElementById('recKH').innerText = '- ml/วัน';
+            document.getElementById('recCa').innerText = '- ml/วัน';
+            document.getElementById('recMg').innerText = '- ml/วัน';
+            document.getElementById('alternateDoseText').innerText = '-';
+            return;
+        }
+
+        const latest = reefLogs[reefLogs.length - 1];
+        const previous = reefLogs[reefLogs.length - 2];
+
+        const date1 = new Date(previous.date);
+        const date2 = new Date(latest.date);
+        const diffDays = Math.max(1, (date2 - date1) / (1000 * 60 * 60 * 24));
+
+        const systemVol = parseFloat(document.getElementById('waterVolume').value) || 40;
+
+        // คำนวณการเปลี่ยนแปลง + โดสที่เติมเข้าไประหว่างงวด
+        const khDrop = (previous.kh - latest.kh) + (parseFloat(latest.dosedKH) || 0) * (10 / systemVol);
+        const caDrop = (previous.ca - latest.ca) + (parseFloat(latest.dosedCa) || 0) * (100 / systemVol);
+        const mgDrop = (previous.mg - latest.mg) + (parseFloat(latest.dosedMg) || 0) * (100 / systemVol);
+
+        const khPerDay = Math.max(0, (khDrop / diffDays) * (systemVol / 10));
+        const caPerDay = Math.max(0, (caDrop / diffDays) * (systemVol / 100));
+        const mgPerDay = Math.max(0, (mgDrop / diffDays) * (systemVol / 100));
+
+        document.getElementById('recKH').innerText = khPerDay.toFixed(1) + ' ml/วัน';
+        document.getElementById('recCa').innerText = caPerDay.toFixed(1) + ' ml/วัน';
+        document.getElementById('recMg').innerText = mgPerDay.toFixed(1) + ' ml/วัน';
+
+        // คำนวณแบบวันเว้นวัน (x2 เท่าของรายวัน)
+        const altKH = khPerDay * 2;
+        const altCa = caPerDay * 2;
+        const altMg = mgPerDay * 2;
+        document.getElementById('alternateDoseText').innerText = `KH ${altKH.toFixed(1)} ml | Ca ${altCa.toFixed(1)} ml | Mg ${altMg.toFixed(1)} ml (ทุก 2 วัน)`;
+    }
+
+    // -------------------------------------------------------------
+    // Data Handlers & Firebase Operations
+    // -------------------------------------------------------------
     function saveTargetSettings() {
-        const targetData = {
+        const data = {
             waterVolume: parseFloat(document.getElementById('waterVolume').value) || 40,
-            targetSalinity: document.getElementById('targetSalinity').value,
+            targetSalinity: parseFloat(document.getElementById('targetSalinity').value) || 35,
             targetKH: parseFloat(document.getElementById('targetKH').value) || 8.6,
             targetCa: parseFloat(document.getElementById('targetCa').value) || 450,
             targetMg: parseFloat(document.getElementById('targetMg').value) || 1320
         };
-
-        targetRef.set(targetData).then(() => {
-            alert('✅ บันทึกเป้าหมายค่าน้ำลงระบบ Cloud เรียบร้อยแล้ว!');
-        }).catch((err) => {
-            alert('❌ เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
+        targetRef.set(data).then(() => {
+            alert('💾 บันทึกเป้าหมายค่าน้ำสำเร็จ!');
         });
-    }
-
-    function calculateSalt() {
-        const changeVol = parseFloat(document.getElementById('changeVolume').value) || 0;
-        const targetPPT = parseInt(document.getElementById('targetSalinity').value) || 35;
-        
-        let ratio = saltRealSpec.ratioPerLiter;
-        if (targetPPT === 33) ratio = ratio * (33 / 35);
-        if (targetPPT === 30) ratio = ratio * (30 / 35);
-
-        const saltMl = changeVol * ratio;
-        const factor = changeVol / saltRealSpec.baseVolume;
-
-        const khDose = (saltRealSpec.boostBase.khDose * factor).toFixed(2);
-        const caDose = (saltRealSpec.boostBase.caDose * factor).toFixed(2);
-        const mgDose = (saltRealSpec.boostBase.mgDose * factor).toFixed(2);
-
-        document.getElementById('saltMl').innerText = saltMl.toFixed(1) + ' ml';
-        document.getElementById('saltRatioText').innerText = `${ratio.toFixed(2)} ml / น้ำ 1 ลิตร`;
-        document.getElementById('saltRawSpecText').innerText = `KH ${saltRealSpec.raw.kh} | Ca ${saltRealSpec.raw.ca} | Mg ${saltRealSpec.raw.mg}`;
-        document.getElementById('saltDoseBoostText').innerText = `+KH ${khDose}ml | +Ca ${caDose}ml | +Mg ${mgDose}ml`;
-        document.getElementById('saltTargetSpecText').innerText = `KH ${saltRealSpec.boosted.kh} | Ca ${saltRealSpec.boosted.ca} | Mg ${saltRealSpec.boosted.mg}`;
-    }
-
-    function saveWaterChangeLog() {
-        const changeVol = parseFloat(document.getElementById('changeVolume').value) || 3.16;
-        const targetPPT = parseInt(document.getElementById('targetSalinity').value) || 35;
-        const saltMl = parseFloat(document.getElementById('saltMl').innerText) || 80;
-        const todayStr = new Date().toISOString().split('T')[0];
-
-        const factor = changeVol / saltRealSpec.baseVolume;
-        const khDose = (saltRealSpec.boostBase.khDose * factor).toFixed(2);
-        const caDose = (saltRealSpec.boostBase.caDose * factor).toFixed(2);
-        const mgDose = (saltRealSpec.boostBase.mgDose * factor).toFixed(2);
-
-        const wcData = {
-            date: todayStr,
-            volume: changeVol,
-            saltMl: saltMl,
-            salinity: targetPPT,
-            rawParams: `${saltRealSpec.raw.kh}/${saltRealSpec.raw.ca}/${saltRealSpec.raw.mg}`,
-            dosed: `${khDose}/${caDose}/${mgDose}`,
-            boostedParams: `${saltRealSpec.boosted.kh}/${saltRealSpec.boosted.ca}/${saltRealSpec.boosted.mg}`
-        };
-
-        waterChangeRef.push(wcData).then(() => {
-            alert('🌊 บันทึกประวัติการเปลี่ยนน้ำเรียบร้อยแล้ว!');
-        });
-    }
-
-    function deleteWCLog(key) {
-        if(confirm('คุณต้องการลบรายการเปลี่ยนน้ำนี้หรือไม่?')) {
-            waterChangeRef.child(key).remove();
-        }
-    }
-
-    function renderWaterChangeTable() {
-        const tbody = document.getElementById('wcHistoryTable');
-        tbody.innerHTML = '';
-
-        wcLogs.forEach((log) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${log.date}</td>
-                <td>${log.volume} ลิตร</td>
-                <td>${log.saltMl} ml</td>
-                <td>${log.salinity} ppt</td>
-                <td>${log.rawParams}</td>
-                <td><span style="color:var(--accent-green);">${log.dosed}</span></td>
-                <td><span style="color:var(--primary); font-weight:600;">${log.boostedParams}</span></td>
-                <td><button class="btn-delete" onclick="deleteWCLog('${log.firebaseKey}')">ลบ</button></td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function calculateDosing() {
-        const volume = parseFloat(document.getElementById('waterVolume').value) || 0;
-
-        const curKH = parseFloat(document.getElementById('currentKH').value) || 0;
-        const curCa = parseFloat(document.getElementById('currentCa').value) || 0;
-        const curMg = parseFloat(document.getElementById('currentMg').value) || 0;
-
-        const tarKH = parseFloat(document.getElementById('targetKH').value) || 0;
-        const tarCa = parseFloat(document.getElementById('targetCa').value) || 0;
-        const tarMg = parseFloat(document.getElementById('targetMg').value) || 0;
-
-        let diffKH = tarKH - curKH;
-        let diffCa = tarCa - curCa;
-        let diffMg = tarMg - curMg;
-
-        let alerts = [];
-
-        if (diffKH > 0 && volume > 0) {
-            let totalDoseKH = (diffKH * volume) / 50;
-            document.getElementById('doseKH').innerText = totalDoseKH.toFixed(2) + ' ml';
-            
-            if (diffKH > LIMITS.MAX_KH_PER_DAY) {
-                let days = Math.ceil(diffKH / LIMITS.MAX_KH_PER_DAY);
-                let dailyDose = totalDoseKH / days;
-                document.getElementById('doseKHPlan').innerText = `⚠️ แนะนำแบ่งโดสวันละ ${dailyDose.toFixed(2)} ml (${days} วัน)`;
-                alerts.push(`KH ต่ำกว่าเป้า ${diffKH.toFixed(1)} dKH (ควรค่อยๆ ปรับไม่เกิน ${LIMITS.MAX_KH_PER_DAY} dKH/วัน)`);
-            } else {
-                document.getElementById('doseKHPlan').innerText = `ปลอดภัยสำหรับโดสใน 1 วัน`;
-            }
-        } else {
-            document.getElementById('doseKH').innerText = '0 ml';
-            document.getElementById('doseKHPlan').innerText = diffKH < 0 ? 'ค่าน้ำสูงกว่าเป้าหมาย' : 'ตรงตามเป้าหมาย';
-        }
-
-        if (diffCa > 0 && volume > 0) {
-            let totalDoseCa = (diffCa * volume) / 45;
-            document.getElementById('doseCa').innerText = totalDoseCa.toFixed(2) + ' ml';
-            
-            if (diffCa > LIMITS.MAX_CA_PER_DAY) {
-                let days = Math.ceil(diffCa / LIMITS.MAX_CA_PER_DAY);
-                let dailyDose = totalDoseCa / days;
-                document.getElementById('doseCaPlan').innerText = `⚠️ แนะนำแบ่งโดสวันละ ${dailyDose.toFixed(2)} ml (${days} วัน)`;
-                alerts.push(`Ca ต่ำกว่าเป้า ${diffCa} ppm (ควรค่อยๆ ปรับไม่เกิน ${LIMITS.MAX_CA_PER_DAY} ppm/วัน)`);
-            } else {
-                document.getElementById('doseCaPlan').innerText = `ปลอดภัยสำหรับโดสใน 1 วัน`;
-            }
-        } else {
-            document.getElementById('doseCa').innerText = '0 ml';
-            document.getElementById('doseCaPlan').innerText = diffCa < 0 ? 'ค่าน้ำสูงกว่าเป้าหมาย' : 'ตรงตามเป้าหมาย';
-        }
-
-        if (diffMg > 0 && volume > 0) {
-            let totalDoseMg = (diffMg * volume) / 20;
-            document.getElementById('doseMg').innerText = totalDoseMg.toFixed(2) + ' ml';
-            
-            if (diffMg > LIMITS.MAX_MG_PER_DAY) {
-                let days = Math.ceil(diffMg / LIMITS.MAX_MG_PER_DAY);
-                let dailyDose = totalDoseMg / days;
-                document.getElementById('doseMgPlan').innerText = `⚠️ แนะนำแบ่งโดสวันละ ${dailyDose.toFixed(2)} ml (${days} วัน)`;
-                alerts.push(`Mg ต่ำกว่าเป้า ${diffMg} ppm (ควรค่อยๆ ปรับไม่เกิน ${LIMITS.MAX_MG_PER_DAY} ppm/วัน)`);
-            } else {
-                document.getElementById('doseMgPlan').innerText = `ปลอดภัยสำหรับโดสใน 1 วัน`;
-            }
-        } else {
-            document.getElementById('doseMg').innerText = '0 ml';
-            document.getElementById('doseMgPlan').innerText = diffMg < 0 ? 'ค่าน้ำสูงกว่าเป้าหมาย' : 'ตรงตามเป้าหมาย';
-        }
-
-        const alertBox = document.getElementById('safetyAlert');
-        if (alerts.length > 0) {
-            alertBox.style.display = 'block';
-            alertBox.innerHTML = '<strong>⚠️ คำแนะนำความปลอดภัย:</strong><br>' + alerts.join('<br>');
-        } else {
-            alertBox.style.display = 'none';
-        }
-
-        calculateDailyConsumption();
-    }
-
-    function calculateDailyConsumption() {
-        if (reefLogs.length < 2) {
-            document.getElementById('recKH').innerText = 'รอข้อมูล 2 วัน';
-            document.getElementById('recCa').innerText = 'รอข้อมูล 2 วัน';
-            document.getElementById('recMg').innerText = 'รอข้อมูล 2 วัน';
-            return;
-        }
-
-        const volume = parseFloat(document.getElementById('waterVolume').value) || 0;
-        let totalDropKH = 0, totalDropCa = 0, totalDropMg = 0;
-        let count = 0;
-
-        for (let i = 1; i < reefLogs.length; i++) {
-            const prev = reefLogs[i - 1];
-            const curr = reefLogs[i];
-            const daysDiff = (new Date(curr.date) - new Date(prev.date)) / (1000 * 60 * 60 * 24);
-            if (daysDiff > 0) {
-                totalDropKH += Math.max(0, (prev.kh - curr.kh) / daysDiff);
-                totalDropCa += Math.max(0, (prev.ca - curr.ca) / daysDiff);
-                totalDropMg += Math.max(0, (prev.mg - curr.mg) / daysDiff);
-                count++;
-            }
-        }
-
-        const avgDropKH = count > 0 ? totalDropKH / count : 0;
-        const avgDropCa = count > 0 ? totalDropCa / count : 0;
-        const avgDropMg = count > 0 ? totalDropMg / count : 0;
-
-        let reqKH = 0, reqCa = 0, reqMg = 0;
-        if (volume > 0) {
-            reqKH = (avgDropKH * volume) / 50;
-            reqCa = (avgDropCa * volume) / 45;
-            reqMg = (avgDropMg * volume) / 20;
-        }
-
-        document.getElementById('recKH').innerText = reqKH.toFixed(2) + ' ml/วัน';
-        document.getElementById('recCa').innerText = reqCa.toFixed(2) + ' ml/วัน';
-        document.getElementById('recMg').innerText = reqMg.toFixed(2) + ' ml/วัน';
     }
 
     document.getElementById('logForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        
-        const newEntry = {
-            id: Date.now(),
+        const logData = {
             date: document.getElementById('logDate').value,
             kh: parseFloat(document.getElementById('currentKH').value),
             ca: parseFloat(document.getElementById('currentCa').value),
@@ -961,84 +954,101 @@
             dosedMg: parseFloat(document.getElementById('dosedMg').value) || 0
         };
 
-        logsRef.push(newEntry);
-        
-        document.getElementById('currentKH').value = '';
-        document.getElementById('currentCa').value = '';
-        document.getElementById('currentMg').value = '';
-        document.getElementById('currentNO3').value = '';
-        document.getElementById('dosedKH').value = '';
-        document.getElementById('dosedCa').value = '';
-        document.getElementById('dosedMg').value = '';
+        logsRef.push(logData).then(() => {
+            alert('🚀 บันทึกค่าน้ำเรียบร้อยแล้ว!');
+            document.getElementById('logForm').reset();
+            document.getElementById('logDate').valueAsDate = new Date();
+        });
     });
 
+    function saveWaterChangeLog() {
+        const wcData = {
+            date: new Date().toISOString().split('T')[0],
+            volume: parseFloat(document.getElementById('changeVolume').value) || 3.16,
+            saltMl: parseFloat(document.getElementById('saltMl').innerText) || 80,
+            salinity: document.getElementById('targetSalinity').value,
+            rawSpec: "KH 7.0 | Ca 410 | Mg 1200",
+            doseBoost: document.getElementById('saltDoseBoostText').innerText,
+            targetSpec: "KH 8.6 | Ca 450 | Mg 1320"
+        };
+
+        waterChangeRef.push(wcData).then(() => {
+            alert('🌊 บันทึกประวัติการเปลี่ยนน้ำเรียบร้อยแล้ว!');
+        });
+    }
+
     function deleteLog(key) {
-        if(confirm('คุณต้องการลบค่าน้ำประจำวันรายการนี้หรือไม่?')) {
+        if (confirm('คุณต้องการลบบันทึกรายการนี้ใช่หรือไม่?')) {
             logsRef.child(key).remove();
         }
     }
 
-    function updateApp() {
-        renderOverviewMetrics();
-        renderTable();
-        renderChart();
-        calculateDailyConsumption();
-    }
-
-    function renderOverviewMetrics() {
-        if (reefLogs.length > 0) {
-            const latest = reefLogs[reefLogs.length - 1];
-            document.getElementById('cardLatestKH').innerText = latest.kh ?? '-';
-            document.getElementById('cardLatestCa').innerText = latest.ca ?? '-';
-            document.getElementById('cardLatestMg').innerText = latest.mg ?? '-';
-            document.getElementById('cardLatestNO3').innerText = latest.no3 ?? '-';
+    function deleteWCLog(key) {
+        if (confirm('คุณต้องการลบประวัติการเปลี่ยนน้ำรายการนี้ใช่หรือไม่?')) {
+            waterChangeRef.child(key).remove();
         }
     }
 
-    function renderTable() {
+    // -------------------------------------------------------------
+    // Render Functions & Chart
+    // -------------------------------------------------------------
+    function updateApp() {
+        if (reefLogs.length > 0) {
+            const latest = reefLogs[reefLogs.length - 1];
+            document.getElementById('cardLatestKH').innerText = latest.kh.toFixed(1);
+            document.getElementById('cardLatestCa').innerText = latest.ca;
+            document.getElementById('cardLatestMg').innerText = latest.mg;
+            document.getElementById('cardLatestNO3').innerText = latest.no3.toFixed(1);
+        }
+
+        renderHistoryTable();
+        renderChart();
+        calculateConsumption();
+    }
+
+    function renderHistoryTable() {
         const tbody = document.getElementById('historyTable');
         tbody.innerHTML = '';
-        const reversedLogs = [...reefLogs].reverse();
 
-        reversedLogs.forEach((log, index) => {
-            const originalIndex = reefLogs.length - 1 - index;
-            const prevLog = reefLogs[originalIndex - 1];
-
-            let diffKHText = '', diffCaText = '', diffMgText = '';
-            let statusBadge = '<span class="badge badge-success">🟢 ปกติ</span>';
-
-            if (prevLog) {
-                const daysDiff = Math.max(1, (new Date(log.date) - new Date(prevLog.date)) / (1000 * 60 * 60 * 24));
-                const dKH = log.kh - prevLog.kh;
-                const dCa = log.ca - prevLog.ca;
-                const dMg = log.mg - prevLog.mg;
-
-                const dailyKH = Math.abs(dKH) / daysDiff;
-                const dailyCa = Math.abs(dCa) / daysDiff;
-                const dailyMg = Math.abs(dMg) / daysDiff;
-
-                diffKHText = dKH >= 0 ? `<span class="val-up">(+${dKH.toFixed(1)})</span>` : `<span class="val-down">(${dKH.toFixed(1)})</span>`;
-                diffCaText = dCa >= 0 ? `<span class="val-up">(+${dCa.toFixed(0)})</span>` : `<span class="val-down">(${dCa.toFixed(0)})</span>`;
-                diffMgText = dMg >= 0 ? `<span class="val-up">(+${dMg.toFixed(0)})</span>` : `<span class="val-down">(${dMg.toFixed(0)})</span>`;
-
-                if (dailyKH > LIMITS.MAX_KH_PER_DAY) {
-                    diffKHText += ' ⚠️';
-                    statusBadge = '<span class="badge badge-danger">🔴 KH แกว่งแรง</span>';
-                } else if (dailyCa > LIMITS.MAX_CA_PER_DAY || dailyMg > LIMITS.MAX_MG_PER_DAY) {
-                    statusBadge = '<span class="badge badge-warning">🟡 Ca/Mg แกว่ง</span>';
-                }
+        [...reefLogs].reverse().forEach((log) => {
+            const tr = document.createElement('tr');
+            
+            let statusBadge = '<span class="badge badge-success">เสถียรปกติ</span>';
+            if (log.kh < 7.0 || log.kh > 9.5) {
+                statusBadge = '<span class="badge badge-danger">KH ผิดปกติ</span>';
+            } else if (log.no3 > 10) {
+                statusBadge = '<span class="badge badge-warning">NO3 สูง</span>';
             }
 
+            tr.innerHTML = `
+                <td>${log.date}</td>
+                <td>${log.kh.toFixed(1)}</td>
+                <td>${log.ca}</td>
+                <td>${log.mg}</td>
+                <td>${log.no3.toFixed(1)}</td>
+                <td>${statusBadge}</td>
+                <td>KH +${log.dosedKH || 0}ml | Ca +${log.dosedCa || 0}ml | Mg +${log.dosedMg || 0}ml</td>
+                <td><button class="btn-delete" onclick="deleteLog('${log.firebaseKey}')">ลบ</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderWCHistoryTable() {
+        const tbody = document.getElementById('wcHistoryTable');
+        tbody.innerHTML = '';
+
+        wcLogs.forEach((log) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${log.date}</td>
-                <td>${log.kh} ${diffKHText}</td>
-                <td>${log.ca} ${diffCaText}</td>
-                <td>${log.mg} ${diffMgText}</td>
-                <td>${log.no3}</td>
-                <td>${statusBadge}</td>
-                <td>${log.dosedKH || 0}/${log.dosedCa || 0}/${log.dosedMg || 0}</td>
-                <td><button class="btn-delete" onclick="deleteLog('${log.firebaseKey}')">ลบ</button></td>
+                <td>${log.volume} L</td>
+                <td>${log.saltMl} ml</td>
+                <td>${log.salinity} ppt</td>
+                <td>${log.rawSpec}</td>
+                <td>${log.doseBoost}</td>
+                <td>${log.targetSpec}</td>
+                <td><button class="btn-delete" onclick="deleteWCLog('${log.firebaseKey}')">ลบ</button></td>
             `;
             tbody.appendChild(tr);
         });
@@ -1047,36 +1057,32 @@
     function renderChart() {
         const ctx = document.getElementById('paramChart').getContext('2d');
         const labels = reefLogs.map(l => l.date);
+        const khData = reefLogs.map(l => l.kh);
+        const caData = reefLogs.map(l => l.ca);
+        const mgData = reefLogs.map(l => l.mg);
 
         if (myChart) myChart.destroy();
-
-        Chart.defaults.color = '#94a3b8';
-        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.08)';
 
         myChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'KH', data: reefLogs.map(l => l.kh), borderColor: '#00f2fe', backgroundColor: '#00f2fe', yAxisID: 'y', tension: 0.35 },
-                    { label: 'NO3', data: reefLogs.map(l => l.no3), borderColor: '#ff4b4b', backgroundColor: '#ff4b4b', yAxisID: 'y', tension: 0.35 },
-                    { label: 'Ca', data: reefLogs.map(l => l.ca), borderColor: '#38ef7d', backgroundColor: '#38ef7d', yAxisID: 'y1', tension: 0.35 },
-                    { label: 'Mg', data: reefLogs.map(l => l.mg), borderColor: '#c084fc', backgroundColor: '#c084fc', yAxisID: 'y1', tension: 0.35 }
+                    { label: 'KH (dKH)', data: khData, borderColor: '#00f2fe', backgroundColor: 'rgba(0,242,254,0.1)', yAxisID: 'y' },
+                    { label: 'Calcium (ppm)', data: caData, borderColor: '#38ef7d', backgroundColor: 'transparent', yAxisID: 'y1' },
+                    { label: 'Magnesium (ppm)', data: mgData, borderColor: '#c084fc', backgroundColor: 'transparent', yAxisID: 'y1' }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: { type: 'linear', position: 'left', title: { display: true, text: 'KH / NO3', color: '#00f2fe' } },
-                    y1: { type: 'linear', position: 'right', title: { display: true, text: 'Ca / Mg', color: '#38ef7d' }, grid: { drawOnChartArea: false } }
+                    y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } }
                 }
             }
         });
     }
-
-    calculateSalt();
 </script>
-
 </body>
 </html>
