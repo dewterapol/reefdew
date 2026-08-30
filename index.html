@@ -204,7 +204,7 @@
         
         .dosing-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.9rem; }
         .dosing-item strong { font-family: var(--font-number); }
-        .dosing-sub { font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: -2px; margin-bottom: 8px; }
+        .dosing-sub { font-size: 0.78rem; color: var(--accent-gold); text-align: right; margin-top: -2px; margin-bottom: 10px; font-weight: 500; }
 
         .chart-container { position: relative; height: 320px; margin-bottom: 20px; }
         .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -451,31 +451,31 @@
             </form>
         </div>
 
-        <!-- 3. แนะนำโดส & ความปลอดภัย -->
+        <!-- 3. แนะนำโดสแบบแบ่งรายวันเพื่อคุมความสวิง -->
         <div class="card">
-            <h2>🧪 แนะนำโดส & อัตราสิ้นเปลือง (40L)</h2>
+            <h2>🧪 ตารางโดสรายวันเพื่อลดความสวิง (40L)</h2>
             
             <div id="safetyAlert" class="alert-box"></div>
 
-            <label style="font-weight:600; color:var(--primary); display:block;">โดสปรับเข้าสู่เป้าหมาย (Correction Dosing):</label>
+            <label style="font-weight:600; color:var(--primary); display:block;">1. แผนโดสปรับค่าน้ำเข้าเป้าหมาย (Daily Adjustment):</label>
             <div class="dosing-result">
-                <div class="dosing-item"><span>KH Buffer:</span><strong id="doseKH">0 ml</strong></div>
-                <div class="dosing-sub" id="doseKHPlan"></div>
+                <div class="dosing-item"><span>KH Buffer (รวม):</span><strong id="doseKH">0 ml</strong></div>
+                <div class="dosing-sub" id="doseKHPlan">รอกรอกค่าน้ำปัจจุบัน...</div>
 
-                <div class="dosing-item"><span>Calcium:</span><strong id="doseCa">0 ml</strong></div>
-                <div class="dosing-sub" id="doseCaPlan"></div>
+                <div class="dosing-item"><span>Calcium (รวม):</span><strong id="doseCa">0 ml</strong></div>
+                <div class="dosing-sub" id="doseCaPlan">รอกรอกค่าน้ำปัจจุบัน...</div>
 
-                <div class="dosing-item"><span>Magnesium:</span><strong id="doseMg">0 ml</strong></div>
-                <div class="dosing-sub" id="doseMgPlan"></div>
+                <div class="dosing-item"><span>Magnesium (รวม):</span><strong id="doseMg">0 ml</strong></div>
+                <div class="dosing-sub" id="doseMgPlan">รอกรอกค่าน้ำปัจจุบัน...</div>
             </div>
 
-            <label style="font-weight:600; color:var(--accent-green); margin-top:12px; display:block;">โดสประคองค่าน้ำนิ่ง (Maintenance Dosing):</label>
+            <label style="font-weight:600; color:var(--accent-green); margin-top:14px; display:block;">2. โดสประคองรายวันให้น้ำนิ่ง (Daily Maintenance):</label>
             <div class="recommend-box">
-                <div class="dosing-item"><span>KH (ประจำวัน):</span><strong id="recKH" style="color:var(--accent-green)">- ml/วัน</strong></div>
-                <div class="dosing-item"><span>Ca (ประจำวัน):</span><strong id="recCa" style="color:var(--accent-green)">- ml/วัน</strong></div>
-                <div class="dosing-item"><span>Mg (ประจำวัน):</span><strong id="recMg" style="color:var(--accent-green)">- ml/วัน</strong></div>
+                <div class="dosing-item"><span>KH (เติมประจำวัน):</span><strong id="recKH" style="color:var(--accent-green)">- ml/วัน</strong></div>
+                <div class="dosing-item"><span>Ca (เติมประจำวัน):</span><strong id="recCa" style="color:var(--accent-green)">- ml/วัน</strong></div>
+                <div class="dosing-item"><span>Mg (เติมประจำวัน):</span><strong id="recMg" style="color:var(--accent-green)">- ml/วัน</strong></div>
                 <div class="dosing-item" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:6px;">
-                    <span style="font-size:0.75rem; color:var(--accent-purple);">คำแนะนำแบบวันเว้นวัน:</span>
+                    <span style="font-size:0.75rem; color:var(--accent-purple);">กรณีโดสวันเว้นวัน (x2 เท่า):</span>
                     <span id="alternateDoseText" style="font-size:0.75rem; color:var(--accent-purple); font-weight:600;">-</span>
                 </div>
             </div>
@@ -546,21 +546,20 @@
         appId: "1:219612211355:web:9275b47ae7ebc997977e3e"
     };
 
-    // Safety Limits (สูงสุดต่อวันสำหรับตู้ 40L)
+    // Safety Limits (สูงสุดต่อวันสำหรับตู้ 40L เพื่อป้องกันค่าน้ำสวิง)
     const LIMITS = {
-        MAX_KH_PER_DAY: 0.5,  // dKH/day (ไม่เกิน ~2.0 mL)
-        MAX_CA_PER_DAY: 20,   // ppm/day (ไม่เกิน ~8.0 mL)
-        MAX_MG_PER_DAY: 50,   // ppm/day (ไม่เกิน ~20.0 mL)
-        MAX_NO3_PER_DAY: 5.0
+        MAX_KH_ML_PER_DAY: 2.0,  // mL/วัน (ประมาณ +0.5 dKH/วัน)
+        MAX_CA_ML_PER_DAY: 8.0,  // mL/วัน (ประมาณ +20 ppm/วัน)
+        MAX_MG_ML_PER_DAY: 20.0  // mL/วัน (ประมาณ +50 ppm/วัน)
     };
 
-    // อัปเดตสเปกจริง: น้ำ 3.16L + เกลือ 80ml @ 35ppt (ปรับ Target Mg เป็น 1350)
+    // อัปเดตสเปกจริง: น้ำ 3.16L + เกลือ 80ml @ 35ppt
     const saltRealSpec = {
         baseVolume: 3.16,
         baseSaltMl: 80,
         ratioPerLiter: 80 / 3.16,
         raw: { kh: 7.0, ca: 410, mg: 1200 },
-        boostBase: { khDose: 0.5, caDose: 4.0, mgDose: 1.2 }, // Boost ถึง KH 8.6 / Ca 450 / Mg 1350
+        boostBase: { khDose: 0.5, caDose: 4.0, mgDose: 1.2 },
         boosted: { kh: 8.6, ca: 450, mg: 1350 }
     };
 
@@ -629,7 +628,7 @@
         }
     }
 
-    // Schedule & Dosing Reminder System (วันเสาร์ / วันเว้นวัน)
+    // Schedule & Dosing Reminder System
     function updateScheduleNotice() {
         const now = new Date();
         const dayOfWeek = now.getDay(); 
@@ -804,73 +803,70 @@
     }
 
     // -------------------------------------------------------------
-    // คำนวณ Dosing และ Safety (สำหรับเป้าหมาย KH 8.6, Ca 450, Mg 1350)
+    // คำนวณ Dosing รายวันแบบคุมความสวิง (สำหรับ KH 8.6, Ca 450, Mg 1350)
     // -------------------------------------------------------------
     function calculateDosing() {
-        const systemVol = parseFloat(document.getElementById('waterVolume').value) || 40;
-        const currentKH = parseFloat(document.getElementById('currentKH').value);
-        const currentCa = parseFloat(document.getElementById('currentCa').value);
-        const currentMg = parseFloat(document.getElementById('currentMg').value);
-
         const targetKH = parseFloat(document.getElementById('targetKH').value) || 8.6;
         const targetCa = parseFloat(document.getElementById('targetCa').value) || 450;
         const targetMg = parseFloat(document.getElementById('targetMg').value) || 1350;
+
+        const currentKH = parseFloat(document.getElementById('currentKH').value);
+        const currentCa = parseFloat(document.getElementById('currentCa').value);
+        const currentMg = parseFloat(document.getElementById('currentMg').value);
 
         if (isNaN(currentKH) || isNaN(currentCa) || isNaN(currentMg)) {
             document.getElementById('doseKH').innerText = '0 ml';
             document.getElementById('doseCa').innerText = '0 ml';
             document.getElementById('doseMg').innerText = '0 ml';
-            document.getElementById('doseKHPlan').innerText = '';
-            document.getElementById('doseCaPlan').innerText = '';
-            document.getElementById('doseMgPlan').innerText = '';
+            document.getElementById('doseKHPlan').innerText = 'รอกรอกค่าน้ำปัจจุบัน...';
+            document.getElementById('doseCaPlan').innerText = 'รอกรอกค่าน้ำปัจจุบัน...';
+            document.getElementById('doseMgPlan').innerText = 'รอกรอกค่าน้ำปัจจุบัน...';
             document.getElementById('safetyAlert').style.display = 'none';
             return;
         }
 
-        // สูตรอ้างอิงตู้ 40 ลิตร:
-        // KH: (diff * 40 / 10) = diff * 4.0 mL
-        const diffKH = Math.max(0, targetKH - currentKH);
-        const reqKH = diffKH * 4.0;
-
-        // Ca: (diff / 10) * (40 / 100) * 10 = (diff / 10) * 4.0 mL
-        const diffCa = Math.max(0, targetCa - currentCa);
-        const reqCa = (diffCa / 10) * 4.0;
-
-        // Mg: (diff / 10) * (40 / 100) * 10 = (diff / 10) * 4.0 mL
-        const diffMg = Math.max(0, targetMg - currentMg);
-        const reqMg = (diffMg / 10) * 4.0;
+        // 1. คำนวณปริมาณสารรวมทั้งหมดที่ขาด (สูตรอ้างอิงตู้ 40L)
+        const reqKH = Math.max(0, (targetKH - currentKH) * 4.0);
+        const reqCa = Math.max(0, ((targetCa - currentCa) / 10) * 4.0);
+        const reqMg = Math.max(0, ((targetMg - currentMg) / 10) * 4.0);
 
         document.getElementById('doseKH').innerText = reqKH.toFixed(1) + ' ml';
         document.getElementById('doseCa').innerText = reqCa.toFixed(1) + ' ml';
         document.getElementById('doseMg').innerText = reqMg.toFixed(1) + ' ml';
 
-        // คำนวณแบ่งเติมเพื่อความปลอดภัย
-        const daysKH = Math.ceil(diffKH / LIMITS.MAX_KH_PER_DAY);
-        if (daysKH > 1) {
-            document.getElementById('doseKHPlan').innerText = `⚠️ แบ่งเติมวันละ ${(reqKH / daysKH).toFixed(1)} ml เป็นเวลา ${daysKH} วัน (จำกัด +0.5 dKH/วัน)`;
+        // 2. คำนวณแบ่งโดสรายวันเพื่อป้องกันค่าน้ำสวิง
+        // KH Plan
+        const daysKH = Math.ceil(reqKH / LIMITS.MAX_KH_ML_PER_DAY);
+        if (daysKH <= 1) {
+            document.getElementById('doseKHPlan').innerHTML = `👉 เติม <b>${reqKH.toFixed(1)} mL</b> (ครั้งเดียวในวันนี้)`;
         } else {
-            document.getElementById('doseKHPlan').innerText = 'สามารถเติมได้ในครั้งเดียว';
+            const dailyKH = (reqKH / daysKH).toFixed(1);
+            document.getElementById('doseKHPlan').innerHTML = `👉 แบ่งเติมวันละ <b style="color:var(--primary);">${dailyKH} mL</b> เป็นเวลา <b>${daysKH} วัน</b> (จำกัด +0.5dKH/วัน)`;
         }
 
-        const daysCa = Math.ceil(diffCa / LIMITS.MAX_CA_PER_DAY);
-        if (daysCa > 1) {
-            document.getElementById('doseCaPlan').innerText = `⚠️ แบ่งเติมวันละ ${(reqCa / daysCa).toFixed(1)} ml เป็นเวลา ${daysCa} วัน (จำกัด +20 ppm/วัน)`;
+        // Ca Plan
+        const daysCa = Math.ceil(reqCa / LIMITS.MAX_CA_ML_PER_DAY);
+        if (daysCa <= 1) {
+            document.getElementById('doseCaPlan').innerHTML = `👉 เติม <b>${reqCa.toFixed(1)} mL</b> (ครั้งเดียวในวันนี้)`;
         } else {
-            document.getElementById('doseCaPlan').innerText = 'สามารถเติมได้ในครั้งเดียว';
+            const dailyCa = (reqCa / daysCa).toFixed(1);
+            document.getElementById('doseCaPlan').innerHTML = `👉 แบ่งเติมวันละ <b style="color:var(--primary);">${dailyCa} mL</b> เป็นเวลา <b>${daysCa} วัน</b> (จำกัด +20ppm/วัน)`;
         }
 
-        const daysMg = Math.ceil(diffMg / LIMITS.MAX_MG_PER_DAY);
-        if (daysMg > 1) {
-            document.getElementById('doseMgPlan').innerText = `⚠️ แบ่งเติมวันละ ${(reqMg / daysMg).toFixed(1)} ml เป็นเวลา ${daysMg} วัน (จำกัด +50 ppm/วัน)`;
+        // Mg Plan
+        const daysMg = Math.ceil(reqMg / LIMITS.MAX_MG_ML_PER_DAY);
+        if (daysMg <= 1) {
+            document.getElementById('doseMgPlan').innerHTML = `👉 เติม <b>${reqMg.toFixed(1)} mL</b> (ครั้งเดียวในวันนี้)`;
         } else {
-            document.getElementById('doseMgPlan').innerText = 'สามารถเติมได้ในครั้งเดียว';
+            const dailyMg = (reqMg / daysMg).toFixed(1);
+            document.getElementById('doseMgPlan').innerHTML = `👉 แบ่งเติมวันละ <b style="color:var(--primary);">${dailyMg} mL</b> เป็นเวลา <b>${daysMg} วัน</b> (จำกัด +50ppm/วัน)`;
         }
 
-        // Safety Warnings
+        // Alerts แจ้งเตือนความเสี่ยง
         let alerts = [];
-        if (diffKH > 1.0) alerts.push("⚠️ ค่า KH ต่างจากเป้าหมายเกิน 1.0 dKH ค่อยๆ ปรับเพิ่มวันละไม่เกิน 0.5 dKH (2.0 mL/วัน)");
-        if (diffCa > 50) alerts.push("⚠️ ค่า Calcium ต่ำกว่าเป้าหมายเกิน 50 ppm");
-        if (diffMg > 100) alerts.push("⚠️ ค่า Magnesium ต่ำกว่าเป้าหมายเกิน 100 ppm");
+        if ((targetKH - currentKH) > 1.0) alerts.push("⚠️ ค่า KH ต่ำกว่าเป้าหมายเกิน 1.0 dKH ควรทยอยแบ่งเติมอย่างเคร่งครัด");
+        if ((targetCa - currentCa) > 50) alerts.push("⚠️ ค่า Calcium ต่ำกว่าเป้าหมายเกิน 50 ppm");
+        if ((targetMg - currentMg) > 100) alerts.push("⚠️ ค่า Magnesium ต่ำกว่าเป้าหมายเกิน 100 ppm");
 
         const alertBox = document.getElementById('safetyAlert');
         if (alerts.length > 0) {
